@@ -1,0 +1,5 @@
+packages:
+  - "packages/table-grid-core"
+  - "packages/table-grid-javascript"
+  - "packages/table-grid-react"
+  - "packages/table-grid-vue"

@@ -1,0 +1,33 @@
+{
+  "name": "@scode/table-grid-main",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@floating-ui/dom": "^1.6.12",
+    "@scode/table-grid-core": "workspace:*",
+    "@scode/table-grid-vue": "workspace:*",
+    "es-toolkit": "^1.27.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vue": "^3.5.12"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.9.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "@vitejs/plugin-vue": "^5.1.4",
+    "less": "^4.2.0",
+    "rimraf": "^6.0.1",
+    "typescript": "~5.6.2",
+    "vite": "^5.4.10",
+    "vue-tsc": "^2.1.8"
+  }
+}
