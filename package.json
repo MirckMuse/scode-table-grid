@@ -11,6 +11,7 @@
   "dependencies": {
     "@floating-ui/dom": "^1.6.12",
     "@scode/table-grid-core": "workspace:*",
+    "@scode/table-grid-react": "workspace:*",
     "@scode/table-grid-vue": "workspace:*",
     "es-toolkit": "^1.27.0",
     "react": "^18.3.1",

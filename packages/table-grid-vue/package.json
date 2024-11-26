@@ -1,18 +1,32 @@
 {
   "name": "@scode/table-grid-vue",
+  "version": "0.0.1",
+  "description": "",
   "module": "./src/index.ts",
   "types": "./src/index.ts",
   "type": "module",
+  "exports": {
+    ".": {
+      "module": "./src/index.ts",
+      "types": "./src/index.ts"
+    },
+    "./style/index.less": "./src/style/index.less"
+  },
   "scripts": {
     "build": "npm run clean && vue-tsc && cross-env FORMAT=es vite build && npm run build:dts",
     "build:dts": "vue-tsc -p tsconfig.declaration.json",
     "clean": "rimraf esm"
   },
-  "devDependencies": {},
   "peerDependencies": {
     "vue": ">= 3"
   },
   "dependencies": {
     "@scode/table-grid-core": "workspace:*"
-  }
+  },
+  "keywords": [
+    "vue3",
+    "table"
+  ],
+  "author": "mirckzhang",
+  "license": "ISC"
 }

@@ -1,12 +1,27 @@
 {
-  "name": "table-grid-react",
-  "version": "1.0.0",
+  "name": "@scode/table-grid-react",
+  "version": "0.0.1",
   "description": "",
-  "main": "index.js",
+  "type": "module",
+  "types": "./src/index.ts",
+  "module": "./src/index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "npm run clean && vue-tsc && cross-env FORMAT=es vite build && npm run build:dts",
+    "build:dts": "vue-tsc -p tsconfig.declaration.json",
+    "clean": "rimraf esm"
   },
-  "keywords": [],
-  "author": "",
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "dependencies": {
+    "@scode/table-grid-core": "workspace:*",
+    "classnames": "^2.5.1"
+  },
+  "keywords": [
+    "react",
+    "table"
+  ],
+  "author": "mirckzhang",
   "license": "ISC"
 }

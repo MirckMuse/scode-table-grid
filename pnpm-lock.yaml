@@ -14,6 +14,9 @@ importers:
       '@scode/table-grid-core':
         specifier: workspace:*
         version: link:packages/table-grid-core
+      '@scode/table-grid-react':
+        specifier: workspace:*
+        version: link:packages/table-grid-react
       '@scode/table-grid-vue':
         specifier: workspace:*
         version: link:packages/table-grid-vue
@@ -68,7 +71,20 @@ importers:
 
   packages/table-grid-javascript: {}
 
-  packages/table-grid-react: {}
+  packages/table-grid-react:
+    dependencies:
+      '@scode/table-grid-core':
+        specifier: workspace:*
+        version: link:../table-grid-core
+      classnames:
+        specifier: ^2.5.1
+        version: 2.5.1
+      react:
+        specifier: ^18.0.0
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.0.0
+        version: 18.3.1(react@18.3.1)
 
   packages/table-grid-vue:
     dependencies:
@@ -610,6 +626,9 @@ packages:
 
   caniuse-lite@1.0.30001680:
     resolution: {integrity: sha512-rPQy70G6AGUMnbwS1z6Xg+RkHYPAi18ihs47GH0jcxIG7wArmPgY3XbS2sRdBbxJljp3thdT8BIqv9ccCypiPA==, tarball: https://registry.npmmirror.com/caniuse-lite/-/caniuse-lite-1.0.30001680.tgz}
+
+  classnames@2.5.1:
+    resolution: {integrity: sha512-saHYOzhIQs6wy2sVxTM6bUDsQO4F50V9RQ22qBpEdCW+I+/Wmke2HOl6lS6dTpdxVhb88/I6+Hs+438c3lfUow==, tarball: https://registry.npmmirror.com/classnames/-/classnames-2.5.1.tgz}
 
   color-convert@2.0.1:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==, tarball: https://registry.npmmirror.com/color-convert/-/color-convert-2.0.1.tgz}
@@ -1472,6 +1491,8 @@ snapshots:
       update-browserslist-db: 1.1.1(browserslist@4.24.2)
 
   caniuse-lite@1.0.30001680: {}
+
+  classnames@2.5.1: {}
 
   color-convert@2.0.1:
     dependencies:

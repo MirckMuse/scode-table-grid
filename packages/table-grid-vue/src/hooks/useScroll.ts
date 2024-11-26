@@ -1,6 +1,6 @@
 import type { TableState } from "@scode/table-grid-core";
 import { throttle } from "es-toolkit";
-import { nextTick, onMounted, triggerRef, type Ref, type ShallowRef } from "vue";
+import { onMounted, triggerRef, type ShallowRef } from "vue";
 
 export const optimizeScrollXY = (
   x: number,

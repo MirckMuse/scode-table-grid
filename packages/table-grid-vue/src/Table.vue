@@ -8,7 +8,7 @@
 import type { TableProps, InternalTableRef, TableEmit } from "./typing";
 import { useStateProvide } from "./hooks";
 import InternalTable from "./components/InternalTable.vue";
-import { shallowRef, computed, watchEffect, watch } from "vue";
+import { shallowRef, computed, watch } from "vue";
 
 defineOptions({
   name: "STable",
