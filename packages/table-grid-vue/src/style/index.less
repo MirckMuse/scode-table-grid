@@ -98,6 +98,12 @@
 
 }
 
+.s-table-bordered {
+  .s-table-body {
+    border-bottom: 1px solid var(--table-border-color);
+  }
+}
+
 .s-table-header-cell {
   &__append {
     display: flex;
@@ -188,6 +194,7 @@
 .s-table-spin {
   width: 100%;
   height: 100%;
+  box-sizing: border-box;
 }
 
 @keyframes zoom-big-fast {
@@ -218,7 +225,7 @@
   transition: background-color .2s ease-in-out;
   background-color: initial;
   min-height: 0;
-  display: inline-flex;
+  display: flex;
   min-width: 0;
   align-items: center;
 
@@ -426,7 +433,7 @@
   display: grid;
   padding: 0;
   margin: 0;
-  height: 100%;
+  height: max-content;
   background-color: var(--table-body-cell-bg);
 
   &__hover {
@@ -525,3 +532,5 @@ svg.s-icon {
     fill: var(--table-header-cell-sorter-color-active);
   }
 }
+
+@import "./scroll.less";

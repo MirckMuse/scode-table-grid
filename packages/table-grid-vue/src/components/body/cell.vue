@@ -8,14 +8,13 @@ import { shallowRef, defineComponent, h, isVNode } from 'vue';
 import { useStateInject } from "../../hooks";
 import { isNil } from "es-toolkit";
 import { get, isObject } from "es-toolkit/compat";
-import { toArray } from "@scode/table-grid-core"
-
+import { toArray } from "@scode/table-grid-core";
 
 // 放在组件外部是为了减少函数的创建
 const isEmptyCell = (target: any) => false;
 
 function getText(column: TableColumn, record: RawData): Option<unknown> {
-  if (!column.dataIndex) return null;
+  if (!column?.dataIndex) return null;
 
   if (isNil(record)) return null;
 
@@ -59,8 +58,12 @@ function renderCustomCell(props: TableBodyCellProps, text: unknown, title: unkno
   return validVNodes.length ? validVNodes : null;
 }
 
+
 export default defineComponent<TableBodyCellProps>({
   name: "STableBodyCell",
+
+  // FIXME: PROPS 定义的方式有点问题，需要减少人工配置成本
+  props: ["prefixCls", "column", "record", "rowIndex", "rowKey", "colKey", "deep", "indentSize", "isMergedCell", "transformCellText", "bodyCell"],
 
   setup(props, { slots }) {
     const cellRef = shallowRef<HTMLElement>();
@@ -79,7 +82,7 @@ export default defineComponent<TableBodyCellProps>({
 
       const contentVNodes = renderCustomCell(props, text, title);
 
-      const meta = tableState.value.get_merged_cell_meta(rowKey, colKey);
+      const meta = isMergedCell ? tableState.value.get_merged_cell_meta(rowKey, colKey) : null;
 
       const scroll = tableState.value.scroll;
 
@@ -90,7 +93,9 @@ export default defineComponent<TableBodyCellProps>({
       }
 
       const cellStyle: StyleValue = {
-        transform: `translate(${meta.x - scroll.left}px, ${meta.y - scroll.top}px, 0)`
+      }
+      if (meta) {
+        cellStyle.transform = `translate(${meta.x - scroll.left}px, ${meta.y - scroll.top}px, 0)`;
       }
 
       const expandIcon = slots["expandIcon"]?.() ?? null;
@@ -110,9 +115,13 @@ export default defineComponent<TableBodyCellProps>({
         }
       }
 
+      const cellInnerClass = {
+        [cellPrefixCls + "__inner"]: true,
+      }
+
       const cellInner = h(
         "div",
-        { ref: cellInnerRef },
+        { ref: cellInnerRef, class: cellInnerClass },
         ([expandIcon] as any[]).concat(children) as any[]
       );
 

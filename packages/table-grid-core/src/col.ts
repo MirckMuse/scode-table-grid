@@ -1,5 +1,5 @@
 import type { TableState } from "./table";
-import type { Option, Scroll, TableColumn, Viewport } from "./types";
+import type { Option, Scroll, TableColumn, IViewport } from "./types";
 
 import { isNil, isNotNil } from "es-toolkit";
 
@@ -36,6 +36,8 @@ export class ColState {
 
   protected col_key_map_parent = new Map<ColKey, Option<ColKey>>();
 
+  protected col_key_map_column = new Map<ColKey, Option<TableColumn>>();
+
   protected seed = 0;
 
   constructor(table_state: TableState) {
@@ -47,6 +49,7 @@ export class ColState {
     this.col_key_map_meta.clear();
     this.col_key_map_children.clear();
     this.col_key_map_parent.clear();
+    this.col_key_map_column.clear();
   }
 
   protected create_meta(
@@ -83,6 +86,7 @@ export class ColState {
     columns.forEach((column, col_index) => {
       const col_meta = this.create_meta(column, col_index, parent_column);
       const col_key = col_meta.key;
+      this.col_key_map_column.set(col_key, column);
       this.col_key_map_meta.set(col_key, col_meta);
       if (parent_col_key) {
         this.col_key_map_parent.set(col_key, parent_col_key);
@@ -108,12 +112,25 @@ export class ColState {
     return this.col_key_map_meta.get(col_key);
   }
 
+  get_column(col_key: ColKey): Option<TableColumn> {
+    return this.col_key_map_column.get(col_key);
+  }
+
   get_all_meta(): ColMeta[] {
     return Array.from(this.col_key_map_meta.values());
   }
 
+  /**
+   * 
+   * @description 获取所有最深的，从 0 开始
+   */
   get_deepest(): number {
     return Math.max(...this.get_all_meta().map((meta) => meta.deep));
+  }
+
+  get_height(): number {
+    // FIXME: 需要计算真实高度
+    return (this.get_deepest() + 1) * this.table_state.config.col_height;
   }
 
   // 获取列宽，用于表头、
@@ -131,9 +148,11 @@ export class ColState {
 
   update_col_width(col_key: ColKey, width: number) {
     const meta = this.get_meta(col_key);
+
     if (!meta) return;
     meta.width = width;
-    let parent_col_meta: Option<ColMeta> = this.get_meta(col_key);
+
+    let parent_col_meta: Option<ColMeta> = this.get_parent_meta(col_key);
 
     const _process = (width: number, meta: ColMeta): number =>
       width + (meta.width ?? 0);
@@ -169,7 +188,7 @@ export class ColState {
     ) as ColMeta[];
   }
 
-  get_virtual_columns(viewport: Viewport, scroll: Scroll): TableColumn[] {
+  get_virtual_columns(viewport: IViewport, scroll: Scroll): TableColumn[] {
     return [];
   }
 }

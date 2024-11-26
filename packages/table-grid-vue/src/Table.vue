@@ -5,12 +5,10 @@
 </template>
 
 <script lang="ts" setup>
-import type { TableProps, InternalTableRef, TableEmit, TableColumn } from "./typing";
+import type { TableProps, InternalTableRef, TableEmit } from "./typing";
 import { useStateProvide } from "./hooks";
 import InternalTable from "./components/InternalTable.vue";
-import { shallowRef, computed, watchEffect } from "vue";
-import type { ColKey, TableColumn as CoreTableColumn } from "@scode/table-grid-core";
-import { uuid } from "@scode/table-grid-core";
+import { shallowRef, computed, watchEffect, watch } from "vue";
 
 defineOptions({
   name: "STable",
@@ -26,14 +24,15 @@ const emit = defineEmits<TableEmit>()
 
 const { tableRef, tableState, updateColumns } = useStateProvide(props);
 
-watchEffect(() => updateColumns(props.columns ?? []));
-watchEffect(() => tableState.value.update_dataset(props.dataSource ?? []));
+watch(() => props.columns, () => {
+  updateColumns(props.columns ?? []);
+}, { immediate: true });
 
-console.log(tableState.value);
+watch(() => props.dataSource, () => {
+  tableState.value.update_dataset(props.dataSource ?? [])
+}, { immediate: true });
 
 const internalTable = shallowRef<InternalTableRef>();
 
-const tableClass = computed(() => {
-  return [props.prefixCls];
-});
+const tableClass = computed(() => [props.prefixCls]);
 </script>

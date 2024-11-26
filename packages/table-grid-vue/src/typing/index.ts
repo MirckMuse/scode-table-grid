@@ -27,6 +27,14 @@ export interface InternalTableRef {
 
 export type TransformCellText = (option: { text: any; column: TableColumn; record: RawData; index: number }) => any;
 
+export interface TableScroll {
+  position: "inner" | "outer";
+
+  mode: "always" | "hover";
+
+  size: number;
+}
+
 export interface TableProps {
   prefixCls?: string;
 
@@ -41,6 +49,8 @@ export interface TableProps {
   transformCellText?: TransformCellText;
 
   columns?: TableColumn[];
+
+  scroll?: Partial<TableScroll>;
 }
 
 export type TableColumnAlign = "left" | "right" | "center";

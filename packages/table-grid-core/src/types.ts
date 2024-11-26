@@ -1,6 +1,13 @@
 import type { RawData, RowKey } from "./row";
 import type { ColKey } from "./col";
 
+export interface Box {
+  width: number;
+
+  height: number;
+}
+
+
 // 获取行数据的 key
 export type GetRowKey = (raw_data: RawData) => RowKey;
 
@@ -10,10 +17,7 @@ export type Option<T> = T | null | undefined;
 export type Noop = () => void;
 
 // 窗口可视区域
-export interface Viewport {
-  width: number;
-
-  height: number;
+export interface IViewport extends Box {
 }
 
 // 滚动距离

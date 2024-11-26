@@ -16,7 +16,7 @@ export interface TableBodyCellProps extends BodyCellInheritProps {
 
   deep: number;
 
-  indentSize: string | number;
+  indentSize?: string | number;
 
-  isMergedCell: boolean;
+  isMergedCell?: boolean;
 }

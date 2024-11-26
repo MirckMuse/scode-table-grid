@@ -1,4 +1,4 @@
-import type { GetRowKey, Option, Scroll, Viewport } from "./types";
+import type { GetRowKey, Option, Scroll, IViewport } from "./types";
 import type { TableState } from "./table";
 import { TableDataset } from "./dataset";
 import { isNotNil } from "es-toolkit";
@@ -19,6 +19,11 @@ export type UpdateRowDataCallback = (
 
 // 创建 compare 函数，高度。
 const _create_compare = (target_y: number) => (y: number) => target_y - y;
+
+type RowHeights = {
+  row_key: RowKey,
+  height: number,
+}
 
 export interface RowMeta {
   key: RowKey;
@@ -53,7 +58,7 @@ export class RowState {
   get_row_height_by_row_key!: (row_key: RowKey) => number;
 
   // 获取虚拟的数据集
-  get_virtual_dataset!: (viewport: Viewport, scroll: Scroll) => RawData[];
+  get_virtual_dataset!: (viewport: IViewport, scroll: Scroll) => RawData[];
 
   private row_key_map_row_meta: Map<RowKey, RowMeta> = new Map();
 
@@ -121,8 +126,14 @@ export class RowState {
     return this.row_key_map_row_meta.get(row_key) ?? null;
   }
 
-  display_dataset_y: number[];
-  display_dataset: RawData[];
+  display_dataset_y: number[] = [];
+  display_dataset: RawData[] = [];
+
+  get_y(raw_data: RawData): number {
+    const index = this.display_dataset.findIndex(_raw => _raw === raw_data);
+
+    return this.display_dataset_y[index] ?? 0;
+  }
   update_dataset(raw_datas: RawData[]) {
     this.init();
     this.dataset.init();
@@ -171,7 +182,7 @@ export class RowState {
   }
 
   // 重置展示数据的 y 的坐标
-  protected reset_display_dataset_y() {
+  reset_display_dataset_y() {
     let y = 0;
     const list: number[] = [];
     for (const raw_data of this.display_dataset) {
@@ -202,16 +213,22 @@ export class RowState {
     }
   }
 
-  update_row_height_by_row_key(row_key: RowKey, height: number) {
+  update_row_height_by_row_key(row_key: RowKey, height: number): boolean {
     const meta = this.get_meta_by_row_key(row_key);
-
     if (!meta) {
       console.error(`[Error] Table Row: Can't find meta by: ${row_key}`);
-      return;
+      return false;
     }
 
+    if (this.get_row_height_by_row_key(row_key) === height) {
+      return false;
+    }
+
+    const is_change = meta.height !== height;
     meta.height = height;
     this.row_key_map_row_meta.set(row_key, meta);
+
+    return is_change;
   }
 
   get_row_height_by_raw_data(raw_data: RawData): number {
@@ -235,7 +252,7 @@ export class RowState {
 
   // 固定行高的可视数据计算
   protected get_virtual_dataset_fixed_row_height(
-    viewport: Viewport,
+    viewport: IViewport,
     scroll: Scroll,
   ): RawData[] {
     const row_height = this.row_height;
@@ -246,12 +263,12 @@ export class RowState {
     let to = Math.ceil(viewport_height / row_height) + from;
 
     [from, to] = this.adjust_from_to(from, to);
-    return this.display_dataset.slice(from, to);
+    return this.display_dataset.slice(from, to + 1);
   }
 
   // 不固定行高的可视数据计算
   protected get_vritual_dataset_auto_row_height(
-    viewport: Viewport,
+    viewport: IViewport,
     scroll: Scroll,
   ): RawData[] {
     const scroll_top = scroll.top;
@@ -273,7 +290,6 @@ export class RowState {
     }
 
     [from, to] = this.adjust_from_to(from, to);
-
-    return this.display_dataset.slice(from, to);
+    return this.display_dataset.slice(from, to + 1);
   }
 }

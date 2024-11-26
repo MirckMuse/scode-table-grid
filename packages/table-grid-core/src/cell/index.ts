@@ -1,11 +1,6 @@
 import type { ColKey, ColState } from "../col";
 import type { RowKey, RowState } from "../row";
-
-export interface Box {
-  width: number;
-
-  height: number;
-}
+import type { Box } from "../types";
 
 export interface CellMeta extends Box {
   row_key: RowKey;
@@ -29,7 +24,7 @@ export class Cell {
     readonly row_state: RowState,
     readonly col_state: ColState,
     readonly meta: CellMeta,
-  ) {}
+  ) { }
 
   get height(): number {
     return this.meta.height;
@@ -42,7 +37,7 @@ export class Cell {
 
 // TODO: 当配置存在合并行时，需要使用该类
 export class MergedCell {
-  constructor(readonly meta: MergedCellMeta) {}
+  constructor(readonly meta: MergedCellMeta) { }
 
   // TODO:
   get height() {

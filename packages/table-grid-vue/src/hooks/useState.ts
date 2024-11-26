@@ -1,17 +1,15 @@
-import type { Viewport, TableColumn as CoreTableColumn, ColKey, Option } from "@scode/table-grid-core";
-import type { InjectionKey, ComputedRef, Ref } from "vue";
+import type { IViewport, TableColumn as CoreTableColumn, ColKey } from "@scode/table-grid-core";
+import type { InjectionKey, ComputedRef, Ref, ShallowRef } from "vue";
 import type { TableColumn, TableProps } from "../typing";
 
 import { TableState, uuid } from "@scode/table-grid-core";
-import { computed, provide, inject, onMounted, shallowRef, ref, onUnmounted } from "vue";
+import { computed, provide, inject, onMounted, shallowRef, onUnmounted, triggerRef } from "vue";
 import { noop } from "es-toolkit";
 
 const TableStateKey: InjectionKey<ITableContext> = Symbol("__table_state__");
 
-
-
 export interface ITableContext {
-  tableState: Ref<TableState>;
+  tableState: ShallowRef<TableState>;
 
   tableProps: Partial<TableProps>;
 
@@ -20,7 +18,7 @@ export interface ITableContext {
   mapToColumn: (colKey: ColKey) => TableColumn;
 }
 
-const DefaultViewport: Viewport = { width: 1920, height: 900 };
+const DefaultViewport: IViewport = { width: 1920, height: 900 };
 
 export function useStateProvide(props: TableProps) {
   const tableRef = shallowRef<HTMLElement>();
@@ -33,12 +31,14 @@ export function useStateProvide(props: TableProps) {
     });
   };
 
-  const tableState = ref<TableState>(_createTableState());
+  const tableState = shallowRef<TableState>(_createTableState());
 
   const $resize = new ResizeObserver((entry) => {
     const el = entry[0];
     const { width, height } = el.contentRect;
     tableState.value.update_viewport({ width, height });
+
+    triggerRef(tableState);
   });
 
   onMounted(() => {
@@ -99,7 +99,7 @@ export function useStateProvide(props: TableProps) {
   });
 
   provide(TableStateKey, {
-    tableState: tableState as Ref<TableState>,
+    tableState: tableState as ShallowRef<TableState>,
     tableProps: props,
     isNestDataSource,
     mapToColumn: (colKey: ColKey) => _columnMap.get(colKey)
@@ -114,7 +114,7 @@ export function useStateProvide(props: TableProps) {
 
 export function useStateInject() {
   return inject(TableStateKey, {
-    tableState: ref(),
+    tableState: shallowRef(),
     tableProps: {},
     isNestDataSource: computed(() => false),
 

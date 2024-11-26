@@ -46,6 +46,7 @@ export interface ITableDefaultConfig {
 
   // 其他参数
   get_row_virtual_buffer: (viewport_row_length: number) => number;
+  get_col_virtual_buffer: (viewport_col_length: number) => number;
 
   scroll_to_top_after_change: boolean;
 }
@@ -67,6 +68,9 @@ export const DefaultConfig: ITableDefaultConfig = {
 
   // 默认取可视数据一半的数据量作为 buffer
   get_row_virtual_buffer: (length: number) => Math.ceil(length / 2),
+
+  // TODO: 未来需要使用的参数
+  get_col_virtual_buffer: (length: number) => Math.ceil(length / 2),
 
   scroll_to_top_after_change: true,
 };

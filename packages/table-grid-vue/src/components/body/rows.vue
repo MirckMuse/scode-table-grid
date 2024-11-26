@@ -1,12 +1,11 @@
 <template>
   <BodyRow v-for="rowData in rowDataSource" :key="rowData.rowKey" :row-key="rowData.rowKey" :meta="rowData.meta"
-    :index="rowData.meta?.index ?? -1" :record="rowData.record" :columns="columns" :grid="grid"
+    :index="rowData.meta?.index ?? -1" :record="rowData.record" :columns="computedColumns" :grid="grid"
     :prefix-cls="prefixCls" />
 </template>
 
 <script lang="ts" setup>
-import type { RawData } from "@scode/table-grid-core";
-import type { TableColumn } from "../../typing";
+import type { ColKey, RawData } from "@scode/table-grid-core";
 import BodyRow from "./row.vue";
 import { useStateInject } from "../../hooks";
 import { computed } from "vue";
@@ -16,7 +15,7 @@ interface BodyRowsProps {
 
   dataSource: RawData[];
 
-  columns: TableColumn[];
+  colKeys: ColKey[];
 
   grid: number[];
 
@@ -25,10 +24,19 @@ interface BodyRowsProps {
 
 const props = defineProps<BodyRowsProps>();
 
-const { tableState } = useStateInject();
+const { tableState, mapToColumn } = useStateInject();
 
 const getRowKey = tableState.value.config.get_row_key;
 const rowState = tableState.value.get_row_state();
+
+const computedColumns = computed(() => {
+  return props.colKeys.map(colKey => {
+    return {
+      colKey,
+      column: mapToColumn(colKey)
+    }
+  })
+})
 
 
 const rowDataSource = computed(() => {

@@ -3,17 +3,29 @@ import type { ColKey, ColMeta } from "./col";
 import type { ITableDefaultConfig } from "./config";
 import type {
   Option,
-  Viewport,
+  IViewport,
   Scroll,
   Pagination,
   TableColumn,
+  Box
 } from "./types";
-import type { Box, CellMeta, MergedCell, MergedCellMeta } from "./cell";
+import type { CellMeta, MergedCellMeta } from "./cell";
 
 import { RowState } from "./row";
 import { DefaultConfig } from "./config";
-import { groupBy } from "es-toolkit";
+import { groupBy, isNil } from "es-toolkit";
 import { ColState } from "./col";
+import { Viewport } from "./viewport";
+
+function get_max_scroll(viewport: IViewport, content: Box): [number, number] {
+  const maxXMove = Math.max(0, content.width - viewport.width);
+  const maxYMove = Math.max(0, content.height - viewport.height);
+  return [maxXMove, maxYMove];
+}
+
+function adjustScrollOffset(offset: number, maxMove: number) {
+  return Math.max(0, Math.min(maxMove, offset))
+}
 
 // 表格状态的配置项目
 export interface ITableStateOption {
@@ -29,7 +41,9 @@ export interface ITableStateOption {
   pagination: boolean | Pagination;
 
   // 必传字段。
-  viewport: Viewport;
+  viewport: IViewport;
+
+  frozen_table_header: boolean;
 }
 
 // 必传属性
@@ -51,17 +65,26 @@ const DefaultTableOption: DefaultInternalTableStateOption = {
   expand_row_keys: [],
 
   pagination: false,
+
+  // 默认冻结表头
+  frozen_table_header: true,
 };
 
 // 表格状态
 export class TableState {
   // 可视区域相关的参数
-  viewport: Viewport = { width: 1920, height: 900 };;
+  viewport: Viewport;
   // 内容尺寸的相关参数
   content_box: Box = { width: 0, height: 0 };
 
-  update_viewport(viewport: Partial<Viewport>) {
-    this.viewport = Object.assign({}, this.viewport, viewport);
+  update_viewport(viewport: Partial<IViewport>) {
+    const is_share_out_columns = isNil(viewport.width) ? false : viewport.width !== this.viewport.width;
+
+    this.viewport.update_viewport(viewport);
+
+    if (is_share_out_columns) {
+      this.share_out_columns_width();
+    }
   }
 
   // 滚动的相关 facet
@@ -71,12 +94,21 @@ export class TableState {
     this.scroll = Object.assign({}, this.scroll, scroll);
   }
 
+  adjust_scroll() {
+    const [maxXMove, maxYMove] = get_max_scroll(this.viewport, this.content_box);
+
+    this.scroll = Object.assign({}, this.scroll, {
+      left: adjustScrollOffset(this.scroll.left, maxXMove),
+      top: adjustScrollOffset(this.scroll.top, maxYMove),
+    });
+  }
+
   config: ITableDefaultConfig;
 
   option: Omit<ITableStateOption, "config">;
 
-  protected row_state;
-  protected col_state;
+  protected row_state: RowState;
+  protected col_state: ColState;
 
   static create(option: TableStateOption): TableState {
     return new TableState(option);
@@ -88,6 +120,8 @@ export class TableState {
     // 初始化配置
     this.config = Object.assign({}, DefaultConfig, config || {});
     this.option = Object.assign({}, DefaultTableOption, rest || {});
+
+    this.viewport = new Viewport(this, this.option.viewport);
 
     this.row_state = new RowState(this);
     this.col_state = new ColState(this);
@@ -108,12 +142,20 @@ export class TableState {
   update_row_cells_size(cells: CellMeta[]) {
     const grouped_cells = groupBy(cells, (item) => item.row_key);
 
+    let is_change = false;
+
     for (const row_key of Object.keys(grouped_cells)) {
       const items = grouped_cells[row_key];
 
       const row_height = Math.max(...items.map((item) => item.height));
 
-      this.row_state.update_row_height_by_row_key(row_key, row_height);
+      is_change = is_change || this.row_state.update_row_height_by_row_key(row_key, row_height);
+    }
+
+    // 高度发生变化后，需要重置 y 的列表和内容高度
+    if (is_change) {
+      this.row_state.reset_display_dataset_y();
+      this.reset_content_box_height();
     }
   }
 
@@ -143,6 +185,7 @@ export class TableState {
 
   // 更新数据集
   update_dataset(dataset: RawData[]) {
+    console.log("update_dataset")
     this.default_scroll_behavior();
 
     this.content_box.height = dataset.length * this.config.row_height;
@@ -157,6 +200,10 @@ export class TableState {
      */
 
     // 重置内容高度
+    this.reset_content_box_height();
+  }
+
+  protected reset_content_box_height() {
     const { display_dataset, display_dataset_y } = this.row_state;
     const last_index = display_dataset.length - 1;
     const last_raw_data = display_dataset[last_index];
@@ -168,16 +215,19 @@ export class TableState {
 
   // 更新筛选项
   update_filter() {
+    console.log('update_filter');
     this.default_scroll_behavior();
   }
 
   // 更新排序
   update_sorter() {
+    console.log("update_sorter");
     this.default_scroll_behavior();
   }
 
   // 更新分页
   update_pagination(pagination: Partial<Pagination>) {
+    console.log("update_pagination");
     this.default_scroll_behavior();
 
     this.row_state.dataset.update_pagination(pagination);
@@ -277,6 +327,8 @@ export class TableState {
     this.left_col_keys.forEach(_update_span);
     this.right_col_keys.forEach(_update_span);
     this.center_col_keys.forEach(_update_span);
+
+    this.share_out_columns_width();
   }
 
   // 更新莫一列的宽度
@@ -288,5 +340,35 @@ export class TableState {
 
   get is_empty(): boolean {
     return !!this.row_state.display_dataset?.length;
+  }
+
+  // 均分列宽
+  share_out_columns_width() {
+    let viewport_width = this.viewport.width;
+    const no_width_col_keys = this.last_center_col_keys.reduce<ColKey[]>((col_keys, col_key) => {
+      const column = this.col_state.get_column(col_key);
+      const width = column?.width;
+
+      if (isNil(width)) {
+        return col_keys.concat(col_key);
+      }
+
+      viewport_width -= width;
+      return col_keys;
+    }, []);
+
+    if (viewport_width <= 0) return;
+
+    const new_width = Math.floor(viewport_width / no_width_col_keys.length);
+    const last_col_width = viewport_width - new_width * (no_width_col_keys.length - 1);
+
+    // TODO: 这里可能会导致同一个单元格多次更新。
+    no_width_col_keys.forEach((col_key, i) => {
+      if (i < (no_width_col_keys.length - 1)) {
+        this.col_state.update_col_width(col_key, new_width);
+      } else {
+        this.col_state.update_col_width(col_key, last_col_width);
+      }
+    });
   }
 }
