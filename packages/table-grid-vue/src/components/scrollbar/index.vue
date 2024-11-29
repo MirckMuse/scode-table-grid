@@ -15,7 +15,7 @@ interface ScrollbarProps {
 
   prefixCls: string;
 
-  vertical: boolean;
+  vertical?: boolean;
 
   client: number;
 

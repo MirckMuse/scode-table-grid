@@ -50,9 +50,30 @@ const leftColumnsVisible = computed(() => {
   const { last_left_col_keys = [] } = tableState.value || {};
   return !!last_left_col_keys.length;
 });
-const leftColumnsClass = computed(() => []);
+const leftColumnsClass = computed(() => {
+  const { prefixCls } = props;
+  return {
+    [`s-table-fixedLeft`]: true,
+    [`${prefixCls}__inner-fixedLeft`]: true,
+    shadow: tableState.value.scroll.left > 0
+  };
+});
 const leftColumnsStyle = computed<StyleValue>(() => {
-  return {}
+  const style: StyleValue = {};
+  const colState = tableState.value.get_col_state()
+
+  const deepest = colState.get_deepest() + 1;
+
+  const { last_left_col_keys, config } = tableState.value;
+
+  style.gridTemplateRows = "repeat(" + deepest + ", 52px)";
+  style.gridTemplateColumns = last_left_col_keys
+    .map(colKey => {
+      return (colState.get_meta(colKey)?.width ?? config.col_width) + 'px';
+    })
+    .join(' ');
+
+  return style;
 });
 
 // 中间表头
@@ -69,9 +90,11 @@ const centerColumnsStyle = computed<StyleValue>(() => {
 
   const deepest = colState.get_deepest() + 1;
 
-  const { last_center_col_keys, config } = tableState.value;
+  const { last_left_col_keys, last_center_col_keys, config ,scroll} = tableState.value;
 
+  style.paddingLeft = colState.get_reduce_width(last_left_col_keys) +'px';
   style.gridTemplateRows = "repeat(" + deepest + ", 52px)";
+  style.transform = `translateX(${-scroll.left}px)`
   style.gridTemplateColumns = last_center_col_keys
     .map(colKey => {
       return (colState.get_meta(colKey)?.width ?? config.col_width) + 'px';

@@ -140,6 +140,12 @@ export class ColState {
     return meta?.width ?? this.table_state.config.col_width;
   }
 
+  get_reduce_width(col_keys: ColKey[]): number {
+    return col_keys.reduce((_w, col_key) => {
+      return _w + this.get_col_width(col_key);
+    }, 0);
+  }
+
   get_col_height(col_key: ColKey): number {
     const meta = this.get_meta(col_key);
 
@@ -150,7 +156,7 @@ export class ColState {
     const meta = this.get_meta(col_key);
 
     if (!meta) return;
-    meta.width = width;
+    meta.width = Math.max(width, this.table_state.config.col_width);
 
     let parent_col_meta: Option<ColMeta> = this.get_parent_meta(col_key);
 

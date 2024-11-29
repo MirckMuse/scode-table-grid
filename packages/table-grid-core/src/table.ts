@@ -163,6 +163,8 @@ export class TableState {
 
   update_col_width(col_key: ColKey, width: number) {
     this.col_state.update_col_width(col_key, width);
+
+
   }
 
   // 渲染时，判断该单元格是不是合并的单元格。
@@ -213,6 +215,12 @@ export class TableState {
       display_dataset_y[last_index] +
       this.row_state.get_row_height_by_raw_data(last_raw_data);
     this.content_box.height = content_height;
+  }
+
+  protected reset_content_box_width() {
+    const { last_center_col_keys, last_left_col_keys, last_right_col_keys } = this;
+
+    this.content_box.width = this.col_state.get_reduce_width(last_left_col_keys.concat(last_center_col_keys).concat(last_right_col_keys));
   }
 
   // 更新筛选项
@@ -359,6 +367,9 @@ export class TableState {
       return col_keys;
     }, []);
 
+    const fixedWidth = this.col_state.get_reduce_width(this.last_left_col_keys.concat(this.last_right_col_keys));
+    viewport_width -= fixedWidth;
+
     if (viewport_width <= 0) return;
 
     const new_width = Math.floor(viewport_width / no_width_col_keys.length);
@@ -372,5 +383,7 @@ export class TableState {
         this.col_state.update_col_width(col_key, last_col_width);
       }
     });
+
+    this.reset_content_box_width();
   }
 }

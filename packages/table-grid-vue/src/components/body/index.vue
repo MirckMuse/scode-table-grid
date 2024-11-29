@@ -7,9 +7,7 @@
 
       <template v-else>
         <div v-if="bodyLeftVisible" ref="tableBodyLeftRef" :class="bodyLeftClass" :style="bodyLeftStyle">
-          <div class="beforeHandler"></div>
-          <BodyRows :col-keys="bodyLeftColKeys" :grid="[]" v-bind="commonRowProps"></BodyRows>
-          <div class="afterHandler"></div>
+          <BodyRows :col-keys="bodyLeftColKeys" :grid="bodyLeftGrid" v-bind="commonRowProps"></BodyRows>
         </div>
 
         <div ref="tableBodyCenterRef" :class="bodyCenterClass" :style="bodyCenterStyle">
@@ -19,17 +17,14 @@
         </div>
 
         <div v-if="bodyRightVisible" ref="tableBodyRightRef" :class="bodyRightClass" :style="bodyRightStyle">
-          <div class="beforeHandler"></div>
           <BodyRows :col-keys="bodyRightColKeys" :grid="[]" v-bind="commonRowProps"></BodyRows>
-          <div class="afterHandler"></div>
         </div>
       </template>
     </div>
-    {{ viewport.height, tableState.content_box.height }}
     <Scrollbar v-if="!isEmpty" :prefix-cls="scrollbarPrefixCls" :state="scrollState" :vertical="true"
       :client="viewport.height" :content="tableState.content_box.height" v-model:scroll="tableState.scroll.top">
     </Scrollbar>
-    <!-- <Scrollbar :prefix-cls="scrollbarPrefixCls" :state="scrollState"></Scrollbar> -->
+    <Scrollbar :prefix-cls="scrollbarPrefixCls" :state="scrollState" :client="viewport.width" :content="tableState.content_box.width" v-model:scroll="tableState.scroll.left"></Scrollbar>
   </div>
 </template>
 
@@ -37,7 +32,7 @@
 import type { RawData } from '@scode/table-grid-core';
 import type { StyleValue } from 'vue';
 
-import { computed, onMounted, onUnmounted, reactive, shallowRef, triggerRef, watchEffect } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, shallowRef, triggerRef } from 'vue';
 import { useStateInject, useTableBodyScroll } from '../../hooks';
 import { useOverrideInject } from '../context/OverrideContext';
 import Scrollbar from "../scrollbar/index.vue";
@@ -84,19 +79,22 @@ const offsetTop = computed(() => {
   return first_raw_data ? tableState.value.get_row_state().get_y(first_raw_data) : 0;
 });
 
-const gridTemplateRows = shallowRef();
+const gridTemplateRows = shallowRef<number[]>([]);
 
 function resetGridTemplateRows() {
-  const heights = [0].concat(tableState.value.get_row_heights(dataSource.value));
-  heights.push(0);
-
-  gridTemplateRows.value = heights.map((height) => height + "px").join(" ");
+  gridTemplateRows.value = tableState.value.get_row_heights(dataSource.value);
 }
 resetGridTemplateRows();
 
 // 左侧固定列
 const tableBodyLeftRef = shallowRef<HTMLElement>();
 const bodyLeftColKeys = computed(() => tableState.value?.last_left_col_keys ?? []);
+const bodyLeftGrid = computed<number[]>(() =>{
+  const colState = tableState.value.get_col_state();
+  const { config, last_left_col_keys } = tableState.value;
+
+  return last_left_col_keys.map(colKey => colState.get_meta(colKey)?.width ?? config.col_width);
+})
 const bodyLeftVisible = computed(() => !!bodyLeftColKeys.value.length);
 const bodyLeftClass = computed(() => {
   const { scroll } = tableState.value;
@@ -108,7 +106,15 @@ const bodyLeftClass = computed(() => {
   }
 });
 const bodyLeftStyle = computed<StyleValue>(() => {
-  return {};
+  const { scroll } = tableState.value;
+
+  const style: StyleValue = {
+    paddingTop: offsetTop.value + 'px',
+    transform: `translate(0, ${-scroll.top}px)`,
+    gridTemplateRows: gridTemplateRows.value.map((height) => height + "px").join(" ")
+  }
+
+  return style;
 });
 
 // 中间列
@@ -127,12 +133,17 @@ const bodyCenterClass = computed(() => {
   }
 });
 const bodyCenterStyle = computed<StyleValue>(() => {
-  const { scroll } = tableState.value;
+  const { scroll, last_left_col_keys } = tableState.value;
+
+  const rows = [0].concat(gridTemplateRows.value).concat([0]);
+
+  const paddingLeft = tableState.value.get_col_state().get_reduce_width(last_left_col_keys);
 
   const style: StyleValue = {
+    paddingLeft: (paddingLeft) + 'px',
     paddingTop: offsetTop.value + 'px',
     transform: `translate(${-scroll.left}px, ${-scroll.top}px)`,
-    gridTemplateRows: gridTemplateRows.value
+    gridTemplateRows: rows.map((height) => height + "px").join(" ")
   }
 
   return style;
@@ -155,7 +166,7 @@ const bodyRightClass = computed(() => {
 });
 const bodyRightStyle = computed<StyleValue>(() => {
   const style: StyleValue = {
-    gridTemplateRows: gridTemplateRows.value
+    gridTemplateRows: gridTemplateRows.value.map((height) => height + "px").join(" ")
   }
 
   return style;
@@ -189,6 +200,7 @@ const _elementToCellMeta = (el: HTMLElement) => {
 }
 
 const updateCellSizes = (mutationsList: MutationRecord[]) => {
+  // 还可以优化，1.兼容性 2.不用获取全量 cell
   const cells = Array.from(tableBodyRef.value?.querySelectorAll(".s-table-body-cell") ?? []) as HTMLElement[];
   const metas = cells.map(_elementToCellMeta);
   tableState.value.update_row_cells_size(metas);
