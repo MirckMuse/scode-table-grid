@@ -1,10 +1,10 @@
-import type { IViewport, TableColumn as CoreTableColumn, ColKey } from "@scode/table-grid-core";
-import type { InjectionKey, ComputedRef, Ref, ShallowRef } from "vue";
+import type { ColKey, TableColumn as CoreTableColumn, IViewport } from "@scode/table-grid-core";
+import type { ComputedRef, InjectionKey, ShallowRef } from "vue";
 import type { TableColumn, TableProps } from "../typing";
 
 import { TableState, uuid } from "@scode/table-grid-core";
-import { computed, provide, inject, onMounted, shallowRef, onUnmounted, triggerRef } from "vue";
 import { noop } from "es-toolkit";
+import { computed, inject, provide, shallowRef } from "vue";
 
 const TableStateKey: InjectionKey<ITableContext> = Symbol("__table_state__");
 
@@ -33,33 +33,6 @@ export function useStateProvide(props: TableProps) {
 
   const tableState = shallowRef<TableState>(_createTableState());
 
-  const $resize = new ResizeObserver((entry) => {
-    const el = entry[0];
-    const { width, height } = el.contentRect;
-    tableState.value.update_viewport({ width, height });
-
-    triggerRef(tableState);
-  });
-
-  onMounted(() => {
-    if (!tableRef.value) return;
-
-    // 更新 viewport 尺寸
-    const { clientWidth, clientHeight } = tableRef.value;
-    tableState.value.update_viewport({
-      width: clientWidth,
-      height: clientHeight,
-    });
-
-    $resize.observe(tableRef.value);
-  });
-
-  onUnmounted(() => {
-    if (tableRef.value) {
-      $resize.unobserve(tableRef.value);
-    }
-    $resize.disconnect();
-  })
 
   const _columnMap = new Map();
   function updateColumns(columns: TableColumn[]) {

@@ -1,5 +1,6 @@
 import type { ColKey, RawData } from "@scode/table-grid-core";
 
+export * from "./inherit";
 
 export type TablePaginationProps = {
   vertical?: "top" | "bottom";

@@ -148,8 +148,8 @@ export class TableState {
       const items = grouped_cells[row_key];
 
       const row_height = Math.max(...items.map((item) => item.height));
-
-      is_change = is_change || this.row_state.update_row_height_by_row_key(row_key, row_height);
+      const _is_change = this.row_state.update_row_height_by_row_key(row_key, row_height);
+      is_change = is_change || _is_change;
     }
 
     // 高度发生变化后，需要重置 y 的列表和内容高度
@@ -157,6 +157,8 @@ export class TableState {
       this.row_state.reset_display_dataset_y();
       this.reset_content_box_height();
     }
+
+    return is_change;
   }
 
   update_col_width(col_key: ColKey, width: number) {

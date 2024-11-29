@@ -16,9 +16,7 @@ export class Viewport {
   }
 
   get height() {
-    return this.table_state.option.frozen_table_header
-      ? this.viewport.height - this.table_state.get_col_state().get_height()
-      : this.viewport.height;
+    return this.viewport.height;
   }
 
   get width() {

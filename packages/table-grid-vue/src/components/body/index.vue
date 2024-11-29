@@ -7,34 +7,41 @@
 
       <template v-else>
         <div v-if="bodyLeftVisible" ref="tableBodyLeftRef" :class="bodyLeftClass" :style="bodyLeftStyle">
+          <div class="beforeHandler"></div>
           <BodyRows :col-keys="bodyLeftColKeys" :grid="[]" v-bind="commonRowProps"></BodyRows>
+          <div class="afterHandler"></div>
         </div>
+
         <div ref="tableBodyCenterRef" :class="bodyCenterClass" :style="bodyCenterStyle">
+          <div ref="beforeHandler" class="beforeHandler"></div>
           <BodyRows :col-keys="bodyCenterColKeys" :grid="bodyCenterGrid" v-bind="commonRowProps"></BodyRows>
+          <div ref="afterHandler" class="afterHandler"></div>
         </div>
+
         <div v-if="bodyRightVisible" ref="tableBodyRightRef" :class="bodyRightClass" :style="bodyRightStyle">
+          <div class="beforeHandler"></div>
           <BodyRows :col-keys="bodyRightColKeys" :grid="[]" v-bind="commonRowProps"></BodyRows>
+          <div class="afterHandler"></div>
         </div>
       </template>
     </div>
-
-    {{ tableState.content_box.height }}
+    {{ viewport.height, tableState.content_box.height }}
     <Scrollbar v-if="!isEmpty" :prefix-cls="scrollbarPrefixCls" :state="scrollState" :vertical="true"
-      :client="viewport.height" :content="tableState.content_box.height"
-      v-model:scroll="tableState.scroll.top">
+      :client="viewport.height" :content="tableState.content_box.height" v-model:scroll="tableState.scroll.top">
     </Scrollbar>
     <!-- <Scrollbar :prefix-cls="scrollbarPrefixCls" :state="scrollState"></Scrollbar> -->
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, onUpdated, reactive, shallowRef, watch, watchEffect, type StyleValue } from 'vue';
+import type { RawData } from '@scode/table-grid-core';
+import type { StyleValue } from 'vue';
+
+import { computed, onMounted, onUnmounted, reactive, shallowRef, triggerRef, watchEffect } from 'vue';
 import { useStateInject, useTableBodyScroll } from '../../hooks';
 import { useOverrideInject } from '../context/OverrideContext';
 import Scrollbar from "../scrollbar/index.vue";
 import BodyRows from "./rows.vue";
-import type { RawData } from '@scode/table-grid-core';
-import { throttle } from 'es-toolkit';
 
 interface TableBodyProps {
   prefixCls: string;
@@ -77,12 +84,15 @@ const offsetTop = computed(() => {
   return first_raw_data ? tableState.value.get_row_state().get_y(first_raw_data) : 0;
 });
 
-const gridTemplateRows = computed(() => {
-  return tableState.value
-    .get_row_heights(dataSource.value)
-    .map((height) => height + "px")
-    .join(" ");
-});
+const gridTemplateRows = shallowRef();
+
+function resetGridTemplateRows() {
+  const heights = [0].concat(tableState.value.get_row_heights(dataSource.value));
+  heights.push(0);
+
+  gridTemplateRows.value = heights.map((height) => height + "px").join(" ");
+}
+resetGridTemplateRows();
 
 // 左侧固定列
 const tableBodyLeftRef = shallowRef<HTMLElement>();
@@ -163,21 +173,8 @@ const viewport = computed(() => {
 
 const isEmpty = computed(() => !dataSource.value.length);
 
-// watch(
-//   () => ([
-//     tableState.value.viewport,
-//     tableState.value.scroll.top,
-//   ]),
-//   () => {
-//     dataSource.value = tableState.value.get_viewport_dataset();
-//   },
-//   { immediate: true }
-// );
-
-watchEffect(() => {
-  dataSource.value = tableState.value.get_viewport_dataset()
-})
-
+const beforeHandler = shallowRef<HTMLElement>();
+const afterHandler = shallowRef<HTMLElement>();
 const commonRowProps = reactive({
   dataSource: dataSource,
   isNestDataSource: isNestDataSource,
@@ -191,14 +188,48 @@ const _elementToCellMeta = (el: HTMLElement) => {
   return { width, height, row_key, col_key };
 }
 
-const throttleUpdateCellSizes = throttle(() => {
+const updateCellSizes = (mutationsList: MutationRecord[]) => {
   const cells = Array.from(tableBodyRef.value?.querySelectorAll(".s-table-body-cell") ?? []) as HTMLElement[];
   const metas = cells.map(_elementToCellMeta);
   tableState.value.update_row_cells_size(metas);
-}, 16);
 
-onUpdated(() => {
-  // TODO: 这里需要移除mergedCell
-  throttleUpdateCellSizes();
+  resetGridTemplateRows();
+}
+
+const $childrenChange = new MutationObserver(updateCellSizes)
+dataSource.value = tableState.value.get_viewport_dataset();
+const $scrollObserver = new IntersectionObserver(() => {
+  dataSource.value = tableState.value.get_viewport_dataset();
+}, { threshold: 0, rootMargin: "10%" })
+
+const $resize = new ResizeObserver((entry) => {
+  const el = entry[0];
+  const { width, height } = el.contentRect;
+  tableState.value.update_viewport({ width, height });
+  triggerRef(tableState);
 });
+
+onMounted(() => {
+  if (tableBodyInnerRef.value) {
+    $childrenChange.observe(tableBodyInnerRef.value, { childList: true, subtree: true });
+  }
+
+  if (tableBodyRef.value) {
+    $resize.observe(tableBodyRef.value);
+  }
+
+  if (beforeHandler.value) {
+    $scrollObserver.observe(beforeHandler.value)
+  }
+
+  if (afterHandler.value) {
+    $scrollObserver.observe(afterHandler.value)
+  }
+});
+
+onUnmounted(() => {
+  $childrenChange.disconnect();
+  $resize.disconnect();
+  $scrollObserver.disconnect();
+})
 </script>

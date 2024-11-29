@@ -7,7 +7,7 @@ import STable from "@scode/table-grid-vue";
 import { TableColumn } from "@scode/table-grid-vue";
 import { ref } from "vue";
 
-const dataSource = ref(Array(30).fill(0).map((_, i) => {
+const dataSource = ref(Array(100000).fill(0).map((_, i) => {
   return { name: `姓名` + i, age: 10 + i, sex: "难" };
 }))
 

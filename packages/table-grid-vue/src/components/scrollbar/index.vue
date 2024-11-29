@@ -49,9 +49,9 @@ const thumbSize = computed(() => Math.max(computedthumbSize.value, MIN_THUMB_SIZ
 
 const thumbStyle = computed(() => {
   let { client, content } = props;
-
   if (props.state?.position === 'inner') {
-    client = client - (props.state?.size ?? 6);
+    // TODO: 交叉轴有的时候，才需要做减法
+    // client = client - (props.state?.size ?? 6);
   }
 
   if (client === content) {
@@ -64,7 +64,6 @@ const thumbStyle = computed(() => {
   offset = Math.min(offset, client - thumbSize.value);
 
   // thumbSize 应该给个最小尺寸
-
   return {
     [sizeKey]: thumbSize.value + "px",
     [marginKey]: offset + "px",

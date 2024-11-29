@@ -1,6 +1,9 @@
 import { TableState, type ColKey, type Option } from "@scode/table-grid-core";
 import { createContext } from "react";
 import type { TableColumn, TableProps } from "../../typing"
+import { noop } from "es-toolkit";
+
+type MapToColumn = (colKey: ColKey) => TableColumn;
 
 interface IStateContext {
   tableState: TableState;
@@ -9,7 +12,7 @@ interface IStateContext {
 
   isNestDataSource: boolean;
 
-  mapToColumn: (colKey: ColKey) => Option<TableColumn>;
+  mapToColumn: (colKey: ColKey) => TableColumn;
 }
 
 // 创建表格状态。
@@ -24,5 +27,5 @@ export const StateContext = createContext<IStateContext>({
   tableState: _createTableState(),
   tableProps: {},
   isNestDataSource: false,
-  mapToColumn: () => null
+  mapToColumn: noop as unknown as MapToColumn
 });

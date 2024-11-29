@@ -434,6 +434,8 @@
   padding: 0;
   margin: 0;
   height: max-content;
+  max-height: 100%;
+  overflow: hidden;
   background-color: var(--table-body-cell-bg);
 
   &__hover {
@@ -531,6 +533,12 @@ svg.s-icon {
   &.s-icon__descend path#descend {
     fill: var(--table-header-cell-sorter-color-active);
   }
+}
+
+.afterHandler,
+.beforeHandler {
+  width: 100%;
+  height: 0;
 }
 
 @import "./scroll.less";
