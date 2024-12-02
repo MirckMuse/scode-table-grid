@@ -32,7 +32,7 @@ import HeaderCells from "./cells.vue";
 
 const props = defineProps<TableHeaderProps>()
 
-const { tableState, mapToColumn } = useStateInject();
+const { tableState, tableProps, mapToColumn } = useStateInject();
 
 // 表头
 const tableHeaderRef = shallowRef<HTMLElement>();
@@ -52,8 +52,9 @@ const leftColumnsVisible = computed(() => {
 });
 const leftColumnsClass = computed(() => {
   const { prefixCls } = props;
+  const { prefixCls: _prefixCls} = tableProps;
   return {
-    [`s-table-fixedLeft`]: true,
+    [`${_prefixCls}-fixedLeft`]: true,
     [`${prefixCls}__inner-fixedLeft`]: true,
     shadow: tableState.value.scroll.left > 0
   };

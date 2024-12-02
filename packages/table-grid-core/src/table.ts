@@ -189,7 +189,6 @@ export class TableState {
 
   // 更新数据集
   update_dataset(dataset: RawData[]) {
-    console.log("update_dataset")
     this.default_scroll_behavior();
 
     this.content_box.height = dataset.length * this.config.row_height;

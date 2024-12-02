@@ -53,7 +53,7 @@ export default function (props: TableCellProps) {
   return (
     <div ref={cellRef} className={cellClass}>
       <div ref={cellInnerRef} className={cellInnerClass}>
-        {text}
+        {String(text)}
       </div>
     </div>
   )

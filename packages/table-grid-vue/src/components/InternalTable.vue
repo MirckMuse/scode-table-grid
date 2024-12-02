@@ -21,6 +21,7 @@ import { useStateInject } from "../hooks";
 import TableHeader from "./header/index.vue"
 import TableBody from "./body/index.vue"
 
+
 defineOptions({
   name: "SInternalTable",
 });

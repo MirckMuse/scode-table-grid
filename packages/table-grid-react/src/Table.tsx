@@ -1,5 +1,5 @@
 import type { TableColumn, TableProps } from "./typing";
-import { useRef, useState, useEffect, type CSSProperties } from "react";
+import { useRef, useState, useEffect, type CSSProperties, useMemo } from "react";
 import { InternalTable } from "./components/InternalTable";
 import { StateContext } from "./components/context";
 import { TableState, uuid, type ColKey, type TableColumn as CoreTableColumn } from "@scode/table-grid-core";
@@ -57,21 +57,35 @@ export function Table(props: TableProps & { style?: CSSProperties }) {
   // 看看未来这个这么支持
   const internalTable = useRef(null);
 
+  const DefaultViewport = { width: 1920, height: 900 };
+
   const tableState = TableState.create({
     config: {},
-    viewport: { width: 1920, height: 900 },
+    viewport: DefaultViewport,
   })
 
-  tableState.update_dataset(rest.dataSource ?? []);
+  const [viewport, setViewport] = useState(DefaultViewport);
+
+  tableState.update_dataset(rest.dataSource ?? [])
 
   const $resize = new ResizeObserver((entry) => {
     const el = entry[0];
     const { width, height } = el.contentRect;
     tableState.update_viewport({ width, height });
+    setViewport({ width, height });
   });
 
   const { updateColumns, mapToColumn } = createColumnUtils(tableState);
   updateColumns(props.columns ?? []);
+
+  const StateContextValue = useMemo(() => {
+    return {
+      tableState,
+      mapToColumn,
+      viewport,
+      tableProps: rest
+    }
+  }, [])
 
   useEffect(() => {
     console.log("mounted")
@@ -80,7 +94,7 @@ export function Table(props: TableProps & { style?: CSSProperties }) {
     }
 
     return () => {
-      console.log("unmoun")
+      console.log("unmounted")
       $resize.disconnect();
     }
   }, [])
@@ -88,7 +102,7 @@ export function Table(props: TableProps & { style?: CSSProperties }) {
   return (
     <div ref={tableRef} className={tableClass} style={style}>
       {/* TODO: 需要整合逻辑到这里 */}
-      <StateContext.Provider value={{ tableState, mapToColumn } as any}>
+      <StateContext.Provider value={StateContextValue as any}>
         <InternalTable {...rest} ></InternalTable>
       </StateContext.Provider>
     </div>

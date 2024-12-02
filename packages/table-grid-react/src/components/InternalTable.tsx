@@ -23,7 +23,7 @@ export function InternalTable(props: TableProps) {
   const paginationVisible = !!pagination;
   const paginationPosition = isObject(pagination) ? pagination.vertical ?? "bottom" : "bottom";
 
-  const { tableState } = useContext(StateContext);
+  const { tableState, viewport } = useContext(StateContext);
 
   return (
     <Spin prefixCls={prefixCls!}>

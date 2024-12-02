@@ -26,7 +26,6 @@ export class Viewport {
   // 重写 json，防止依赖循环
   toJSON() {
     return {
-      viewport: this.viewport,
       width: this.width,
       height: this.height
     }

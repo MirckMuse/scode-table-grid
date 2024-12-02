@@ -1,4 +1,4 @@
-import { useContext, useRef, type CSSProperties } from "react";
+import { useContext, useRef } from "react";
 import type { TableBodyProps } from "./typing";
 import BodyRows from "./rows"
 
@@ -10,7 +10,7 @@ export default function (props: TableBodyProps) {
   const tableBodyPrefixCls = prefixCls + "-body";
 
   const { Empty } = useContext(OverrideContext);
-  const { tableState } = useContext(StateContext);
+  const { tableState, tableProps } = useContext(StateContext);
 
   const tableBodyRef = useRef<HTMLDivElement>(null);
   const tableBodyClass = classNames({
@@ -37,8 +37,35 @@ export default function (props: TableBodyProps) {
       return first_raw_data ? tableState.get_row_state().get_y(first_raw_data) : 0;
     })();
 
-    const { last_center_col_keys, config } = tableState;
+    const {
+      last_left_col_keys,
+      last_center_col_keys,
+      last_right_col_keys,
+      config
+    } = tableState;
     const colState = tableState.get_col_state();
+
+    let fixedLeftBody = null;
+
+    if (last_left_col_keys.length) {
+      const bodyLeftClass = classNames({
+        [`${tableBodyPrefixCls}__inner-fixedLeft`]: true,
+        [`${tableProps.prefixCls}-fixedLeft`]: true,
+      })
+      const bodyLeftStyle = (() => {
+        return {
+          paddingTop: offsetTop + 'px',
+          transform: `translate(0, ${-scroll.top}px)`,
+          gridTemplateRows: gridTemplateRows.map((height) => height + "px").join(" ")
+        }
+      })();
+      const bodyLeftGrid = last_left_col_keys.map(colKey => colState.get_meta(colKey)?.width ?? config.col_width);
+      fixedLeftBody = (
+        <div className={bodyLeftClass} style={bodyLeftStyle}>
+          <BodyRows prefixCls={tableBodyPrefixCls} colKeys={last_left_col_keys} dataSource={dataSource} grid={bodyLeftGrid}></BodyRows>
+        </div>
+      )
+    }
 
     const bodyCenterClass = classNames({
       [`${tableBodyPrefixCls}__inner-center`]: true,
@@ -55,16 +82,19 @@ export default function (props: TableBodyProps) {
         gridTemplateRows: rows.map((height) => height + "px").join(" ")
       };
     })();
-
     const bodyCenterGrid = last_center_col_keys.map(colKey => colState.get_meta(colKey)?.width ?? config.col_width);
 
 
+    let fixedRightBody = null;
+
     bodyContent = <>
+      {fixedLeftBody}
       <div className={bodyCenterClass} style={bodyCenterStyle}>
         <div className="beforeHandler"></div>
         <BodyRows prefixCls={tableBodyPrefixCls} colKeys={last_center_col_keys} dataSource={dataSource} grid={bodyCenterGrid}></BodyRows>
         <div className="afterHandler"></div>
       </div>
+      {fixedRightBody}
     </>
   }
   return (
