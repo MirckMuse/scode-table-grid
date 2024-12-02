@@ -16,7 +16,7 @@
 import { isObject } from "es-toolkit/compat";
 import type { TableProps } from "../typing"
 import { useOverrideInject } from "./context/OverrideContext"
-import { computed, shallowRef } from "vue";
+import { computed, onMounted, shallowRef } from "vue";
 import { useStateInject } from "../hooks";
 import TableHeader from "./header/index.vue"
 import TableBody from "./body/index.vue"
@@ -67,4 +67,8 @@ const paginationPosition = computed(() => {
   const _pagination = props.pagination;
   return isObject(_pagination) ? _pagination.vertical ?? "bottom" : "bottom";
 });
+
+onMounted(()=>{
+  console.log(tableBodyRef.value)
+})
 </script>

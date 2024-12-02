@@ -21,10 +21,11 @@
         </div>
       </template>
     </div>
+
     <Scrollbar v-if="!isEmpty" :prefix-cls="scrollbarPrefixCls" :state="scrollState" :vertical="true"
-      :client="viewport.height" :content="tableState.content_box.height" v-model:scroll="tableState.scroll.top">
+      :client="viewport.height" :content="tableState.content_box.height" v-model:scroll="scroll.top">
     </Scrollbar>
-    <Scrollbar :prefix-cls="scrollbarPrefixCls" :state="scrollState" :client="viewport.width" :content="tableState.content_box.width" v-model:scroll="tableState.scroll.left"></Scrollbar>
+    <Scrollbar :prefix-cls="scrollbarPrefixCls" :state="scrollState" :client="viewport.width" :content="tableState.content_box.width" v-model:scroll="scroll.left"></Scrollbar>
   </div>
 </template>
 
@@ -33,7 +34,7 @@ import type { RawData } from '@scode/table-grid-core';
 import type { StyleValue } from 'vue';
 
 import { computed, onMounted, onUnmounted, reactive, shallowRef, triggerRef } from 'vue';
-import { useStateInject, useTableBodyScroll } from '../../hooks';
+import { useStateInject, useBodyScroll } from '../../hooks';
 import { useOverrideInject } from '../context/OverrideContext';
 import Scrollbar from "../scrollbar/index.vue";
 import BodyRows from "./rows.vue";
@@ -71,7 +72,7 @@ const scrollbarPrefixCls = computed(() => tableProps.prefixCls + "-scrollbar");
 const tableBodyRef = shallowRef<HTMLElement>();
 const tableBodyInnerRef = shallowRef<HTMLElement>();
 
-useTableBodyScroll(tableBodyInnerRef, tableState);
+const { scroll }= useBodyScroll(tableBodyInnerRef, tableState);
 
 const offsetTop = computed(() => {
   const first_raw_data = dataSource.value[0];
@@ -97,20 +98,17 @@ const bodyLeftGrid = computed<number[]>(() =>{
 })
 const bodyLeftVisible = computed(() => !!bodyLeftColKeys.value.length);
 const bodyLeftClass = computed(() => {
-  const { scroll } = tableState.value;
-
   return {
     [`${tableBodyPrefixCls.value}__inner-fixedLeft`]: true,
     [`${tableProps.prefixCls}-fixedLeft`]: true,
-    shadow: scroll.left > 0
+    shadow: scroll.value.left > 0
   }
 });
 const bodyLeftStyle = computed<StyleValue>(() => {
-  const { scroll } = tableState.value;
 
   const style: StyleValue = {
     paddingTop: offsetTop.value + 'px',
-    transform: `translate(0, ${-scroll.top}px)`,
+    transform: `translate(0, ${-scroll.value.top}px)`,
     gridTemplateRows: gridTemplateRows.value.map((height) => height + "px").join(" ")
   }
 
@@ -133,7 +131,7 @@ const bodyCenterClass = computed(() => {
   }
 });
 const bodyCenterStyle = computed<StyleValue>(() => {
-  const { scroll, last_left_col_keys } = tableState.value;
+  const { last_left_col_keys } = tableState.value;
 
   const rows = [0].concat(gridTemplateRows.value).concat([0]);
 
@@ -142,7 +140,7 @@ const bodyCenterStyle = computed<StyleValue>(() => {
   const style: StyleValue = {
     paddingLeft: (paddingLeft) + 'px',
     paddingTop: offsetTop.value + 'px',
-    transform: `translate(${-scroll.left}px, ${-scroll.top}px)`,
+    transform: `translate(${-scroll.value.left}px, ${-scroll.value.top}px)`,
     gridTemplateRows: rows.map((height) => height + "px").join(" ")
   }
 
@@ -154,14 +152,14 @@ const tableBodyRightRef = shallowRef<HTMLElement>();
 const bodyRightColKeys = computed(() => tableState.value?.last_right_col_keys ?? []);
 const bodyRightVisible = computed(() => !!bodyRightColKeys.value.length);
 const bodyRightClass = computed(() => {
-  const { viewport, content_box, scroll } = tableState.value;
+  const { viewport, content_box } = tableState.value;
 
   const maxXMove = content_box.width - viewport.width;
 
   return {
     [`${tableBodyPrefixCls.value}__inner-fixedRight`]: true,
     [`${tableProps.prefixCls}-fixedRight`]: true,
-    shadow: scroll.left < maxXMove
+    shadow: scroll.value.left < maxXMove
   }
 });
 const bodyRightStyle = computed<StyleValue>(() => {
@@ -179,8 +177,6 @@ const viewport = computed(() => {
     height: _view.height,
   }
 })
-
-// const scroll = computed(() => tableState.value.scroll);
 
 const isEmpty = computed(() => !dataSource.value.length);
 
