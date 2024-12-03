@@ -6,7 +6,7 @@
 
 <script lang="ts" setup>
 import type { TableProps, InternalTableRef, TableEmit } from "./typing";
-import { useStateProvide } from "./hooks";
+import { useScroll, useStateProvide } from "./hooks";
 import InternalTable from "./components/InternalTable.vue";
 import { shallowRef, computed, watch } from "vue";
 
@@ -23,6 +23,8 @@ const props = withDefaults(defineProps<TableProps>(), {
 const emit = defineEmits<TableEmit>()
 
 const { tableRef, tableState, updateColumns } = useStateProvide(props);
+
+useScroll(tableState);
 
 watch(() => props.columns, () => {
   updateColumns(props.columns ?? []);

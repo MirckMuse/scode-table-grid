@@ -2,6 +2,12 @@ export * from "./binary";
 
 export * from "./uuid";
 
+export * from "./requestAnimationFrame";
+
+export * from "./addEventListener";
+
+export * from "./runIdleTask";
+
 /**
  * 将传入的参数转换为数组
  * @param target - 需要转换的参数

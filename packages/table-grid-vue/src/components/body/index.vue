@@ -1,6 +1,7 @@
 <template>
   <div :class="tableBodyPrefixCls" ref="tableBodyRef">
-    <div :class="tableBodyPrefixCls + '__inner'" ref="tableBodyInnerRef">
+    
+    <div :class="tableBodyPrefixCls + '__inner'" :style="tableBodyInnerStyle" ref="tableBodyInnerRef">
       <div v-if="isEmpty" :class="tableBodyPrefixCls + '__empty'">
         <component :is="Empty"></component>
       </div>
@@ -9,6 +10,7 @@
         <div v-if="bodyLeftVisible" ref="tableBodyLeftRef" :class="bodyLeftClass" :style="bodyLeftStyle">
           <BodyRows :col-keys="bodyLeftColKeys" :grid="bodyLeftGrid" v-bind="commonRowProps"></BodyRows>
         </div>
+
 
         <div ref="tableBodyCenterRef" :class="bodyCenterClass" :style="bodyCenterStyle">
           <div ref="beforeHandler" class="beforeHandler"></div>
@@ -23,14 +25,14 @@
     </div>
 
     <Scrollbar v-if="!isEmpty" :prefix-cls="scrollbarPrefixCls" :state="scrollState" :vertical="true"
-      :client="viewport.height" :content="tableState.content_box.height" v-model:scroll="scroll.top">
+      :client="viewport.height" :content="tableState.content_box.height" v-model:scroll="scroll.top" @update:scroll="updateScroll">
     </Scrollbar>
-    <Scrollbar :prefix-cls="scrollbarPrefixCls" :state="scrollState" :client="viewport.width" :content="tableState.content_box.width" v-model:scroll="scroll.left"></Scrollbar>
+    <Scrollbar :prefix-cls="scrollbarPrefixCls" :state="scrollState" :client="viewport.width" :content="tableState.content_box.width" v-model:scroll="scroll.left" @update:scroll="updateScroll"></Scrollbar>
   </div>
 </template>
 
 <script lang="ts" setup>
-import type { RawData } from '@scode/table-grid-core';
+import { createLockedRequestAnimationFrame, type RawData } from '@scode/table-grid-core';
 import type { StyleValue } from 'vue';
 
 import { computed, onMounted, onUnmounted, reactive, shallowRef, triggerRef } from 'vue';
@@ -70,9 +72,20 @@ const tableBodyPrefixCls = computed(() => tableProps.prefixCls + "-body");
 const scrollbarPrefixCls = computed(() => tableProps.prefixCls + "-scrollbar");
 
 const tableBodyRef = shallowRef<HTMLElement>();
-const tableBodyInnerRef = shallowRef<HTMLElement>();
+// const tableBodyInnerRef = shallowRef<HTMLElement>();
 
-const { scroll }= useBodyScroll(tableBodyInnerRef, tableState);
+const { scroll, bodyRef: tableBodyInnerRef  }= useBodyScroll();
+
+const updateScroll = createLockedRequestAnimationFrame(() => {
+  Object.assign(scroll.value, tableState.value.scroll);
+});
+
+const contentBox = computed(() => tableState.value.content_box);
+
+const tableBodyInnerStyle = computed(() => {
+  return {}
+});
+
 
 const offsetTop = computed(() => {
   const first_raw_data = dataSource.value[0];
@@ -84,6 +97,10 @@ const gridTemplateRows = shallowRef<number[]>([]);
 
 function resetGridTemplateRows() {
   gridTemplateRows.value = tableState.value.get_row_heights(dataSource.value);
+
+  if(tableState.value.content_box.height !== contentBox.value.height){
+    triggerRef(contentBox)
+  }
 }
 resetGridTemplateRows();
 
@@ -105,10 +122,9 @@ const bodyLeftClass = computed(() => {
   }
 });
 const bodyLeftStyle = computed<StyleValue>(() => {
-
   const style: StyleValue = {
     paddingTop: offsetTop.value + 'px',
-    transform: `translate(0, ${-scroll.value.top}px)`,
+    transform: `translate(0, ${- scroll.value.top}px)`,
     gridTemplateRows: gridTemplateRows.value.map((height) => height + "px").join(" ")
   }
 
@@ -139,8 +155,8 @@ const bodyCenterStyle = computed<StyleValue>(() => {
 
   const style: StyleValue = {
     paddingLeft: (paddingLeft) + 'px',
-    paddingTop: offsetTop.value + 'px',
-    transform: `translate(${-scroll.value.left}px, ${-scroll.value.top}px)`,
+    paddingTop: (offsetTop.value) + 'px',
+    transform: `translate(${-scroll.value.left}px, ${- scroll.value.top}px)`,
     gridTemplateRows: rows.map((height) => height + "px").join(" ")
   }
 
@@ -204,7 +220,7 @@ const updateCellSizes = (mutationsList: MutationRecord[]) => {
   resetGridTemplateRows();
 }
 
-const $childrenChange = new MutationObserver(updateCellSizes)
+const $cellResize = new MutationObserver(updateCellSizes)
 dataSource.value = tableState.value.get_viewport_dataset();
 const $scrollObserver = new IntersectionObserver(() => {
   dataSource.value = tableState.value.get_viewport_dataset();
@@ -219,7 +235,7 @@ const $resize = new ResizeObserver((entry) => {
 
 onMounted(() => {
   if (tableBodyInnerRef.value) {
-    $childrenChange.observe(tableBodyInnerRef.value, { childList: true, subtree: true });
+    $cellResize.observe(tableBodyInnerRef.value, { childList: true, subtree: true });
   }
 
   if (tableBodyRef.value) {
@@ -236,7 +252,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  $childrenChange.disconnect();
+  $cellResize.disconnect();
   $resize.disconnect();
   $scrollObserver.disconnect();
 })

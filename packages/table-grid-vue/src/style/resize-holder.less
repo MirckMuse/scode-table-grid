@@ -1,0 +1,30 @@
+.s-table-header-cell-resizeHolder {
+  position: absolute;
+  width: var(--table-resize-holder-width);
+  height: 100%;
+  top: 0;
+  right: 0;
+  transform: translateX(50%);
+  z-index: 1;
+  cursor: col-resize;
+
+  &:hover::after {
+    display: block;
+  }
+
+  &::after {
+    display: none;
+    position: absolute;
+    height: 100%;
+    width: var(--table-resize-holder-line-width);
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    content: "";
+    background-color: var(--table-resize-holder-color);
+  }
+}
+
+.s-table-header-cell-resizeHolder.dragging::after {
+  display: block;
+}

@@ -216,7 +216,7 @@ export class TableState {
     this.content_box.height = content_height;
   }
 
-  protected reset_content_box_width() {
+  reset_content_box_width() {
     const { last_center_col_keys, last_left_col_keys, last_right_col_keys } = this;
 
     this.content_box.width = this.col_state.get_reduce_width(last_left_col_keys.concat(last_center_col_keys).concat(last_right_col_keys));

@@ -2,9 +2,9 @@ import type { ColKey, TableColumn as CoreTableColumn, IViewport } from "@scode/t
 import type { ComputedRef, InjectionKey, ShallowRef } from "vue";
 import type { TableColumn, TableProps } from "../typing";
 
-import { TableState, uuid } from "@scode/table-grid-core";
-import { noop } from "es-toolkit";
-import { computed, inject, provide, shallowRef } from "vue";
+import { TableState, createLockedRequestAnimationFrame, uuid } from "@scode/table-grid-core";
+import { debounce, noop } from "es-toolkit";
+import { computed, inject, provide, shallowRef, triggerRef } from "vue";
 
 const TableStateKey: InjectionKey<ITableContext> = Symbol("__table_state__");
 
@@ -16,6 +16,8 @@ export interface ITableContext {
   isNestDataSource: ComputedRef<boolean>;
 
   mapToColumn: (colKey: ColKey) => TableColumn;
+
+  handleResizeColumn: (colKey: ColKey, new_width: number) => void;
 }
 
 const DefaultViewport: IViewport = { width: 1920, height: 900 };
@@ -71,11 +73,47 @@ export function useStateProvide(props: TableProps) {
     });
   });
 
+  let userSelectState = {
+    pre: "",
+    isSet: false,
+  };
+  const revertTableUserSelect = debounce(() => {
+    userSelectState.isSet = false;
+    if (!tableRef.value) return;
+    tableRef.value.style.userSelect = userSelectState.pre;
+  }, 60);
+
+  const animationUpdate = createLockedRequestAnimationFrame(() => {
+    tableState.value.reset_content_box_width();
+
+    triggerRef(tableState);
+  });
+
+  const handleResizeColumn = (colKey: ColKey, resizedWidth: number) => {
+    if (!userSelectState.isSet && tableRef.value) {
+      userSelectState.pre = tableRef.value.style.userSelect ?? "";
+      userSelectState.isSet = true;
+      tableRef.value.style.userSelect = "none";
+    }
+
+    // props.onResizeColumn?.(resizedWidth, column);
+    revertTableUserSelect();
+
+    const colState = tableState.value.get_col_state();
+
+    if (colKey) {
+      colState.update_col_width(colKey, resizedWidth);
+    }
+
+    animationUpdate();
+  }
+
   provide(TableStateKey, {
     tableState: tableState as ShallowRef<TableState>,
     tableProps: props,
     isNestDataSource,
-    mapToColumn: (colKey: ColKey) => _columnMap.get(colKey)
+    mapToColumn: (colKey: ColKey) => _columnMap.get(colKey),
+    handleResizeColumn
   });
 
   return {
@@ -90,7 +128,7 @@ export function useStateInject() {
     tableState: shallowRef(),
     tableProps: {},
     isNestDataSource: computed(() => false),
-
-    mapToColumn: noop as any
+    mapToColumn: noop as any,
+    handleResizeColumn: noop
   });
 }

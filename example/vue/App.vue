@@ -14,7 +14,7 @@ const dataSource = ref(Array(100).fill(0).map((_, i) => {
 
 const tableColumns: TableColumn[] = [
   { title: '列 0', dataIndex: "name", width: 120, fixed: true },
-  { title: '列 1', dataIndex: "name" },
+  { title: '列 1', dataIndex: "age", resizable: true },
   // {
   //   title: "分组列",
   //   children: [

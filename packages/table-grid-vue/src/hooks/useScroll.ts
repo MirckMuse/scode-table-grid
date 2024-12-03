@@ -1,6 +1,27 @@
-import type { TableState } from "@scode/table-grid-core";
-import type { ShallowRef } from "vue";
-import { onMounted, ref, watch } from "vue";
+import { type TableState, type Scroll, createLockedRequestAnimationFrame } from "@scode/table-grid-core";
+import type { Ref, ShallowRef, InjectionKey } from "vue";
+import { onMounted, ref, provide, shallowRef, inject } from "vue";
+import { useStateInject } from "./useState";
+
+interface IScroll {
+  headerRef: ShallowRef<HTMLElement | undefined>,
+  bodyRef: ShallowRef<HTMLElement | undefined>,
+  scroll: Ref<Scroll>,
+}
+
+const ScrollKey: InjectionKey<IScroll> = Symbol("__scroll__");
+
+export function useScroll(tableState: ShallowRef<TableState>) {
+  const headerRef = shallowRef<HTMLElement>();
+  const bodyRef = shallowRef<HTMLElement>();
+  const scroll = ref(tableState.value.scroll);
+
+  provide(ScrollKey, {
+    headerRef,
+    bodyRef,
+    scroll,
+  })
+}
 
 // 优化 XY
 export const optimizeScrollXY = (
@@ -19,23 +40,35 @@ export const optimizeScrollXY = (
   return [deltaX * ratio, deltaY * ratio];
 };
 
-export function useHeaderScroll(headerRef: ShallowRef<HTMLElement | undefined>, tableState: ShallowRef<TableState>) {
-
+const DefaultScroll = {
+  headerRef: shallowRef(),
+  bodyRef: shallowRef(),
+  scroll: ref({ top: 0, left: 0 }),
 }
 
-export function useBodyScroll(bodyRef: ShallowRef<HTMLElement | undefined>, tableState: ShallowRef<TableState>) {
-  const scroll = ref(tableState.value.scroll);
 
-  const processWheel = ($event: WheelEvent) => {
+export function useBodyScroll() {
+  const { bodyRef, scroll } = inject(ScrollKey, DefaultScroll);
+
+  const { tableState } = useStateInject();
+
+  function processWheel($event: WheelEvent) {
     $event.preventDefault();
+
+    animationWheel($event);
+  }
+
+  const animationWheel = createLockedRequestAnimationFrame(($event: WheelEvent) => {
     const { deltaX, deltaY } = $event;
+
     const [optimizeX, optimizeY] = optimizeScrollXY(deltaX, deltaY);
-    const { top, left } = Object.assign({}, tableState.value.scroll);
-    const new_scroll = {
-      top: top + optimizeY,
-      left: left + optimizeX
-    }
-    tableState.value.update_scroll(new_scroll);
+
+    const { left, top } = tableState.value.scroll;
+
+    tableState.value.update_scroll({
+      left: left + optimizeX,
+      top: top + optimizeY
+    });
     tableState.value.adjust_scroll();
 
     const _scroll = tableState.value.scroll;
@@ -44,8 +77,9 @@ export function useBodyScroll(bodyRef: ShallowRef<HTMLElement | undefined>, tabl
     if (left === _scroll.left && top === _scroll.top) {
       return;
     }
-    scroll.value = _scroll;
-  }
+
+    Object.assign(scroll.value, _scroll);
+  });
 
   onMounted(() => {
     if (!bodyRef.value) return;
@@ -54,6 +88,48 @@ export function useBodyScroll(bodyRef: ShallowRef<HTMLElement | undefined>, tabl
   });
 
   return {
+    bodyRef,
+    scroll
+  }
+}
+
+export function useHeaderScroll() {
+  const { headerRef, scroll } = inject(ScrollKey, DefaultScroll);
+
+  const { tableState } = useStateInject();
+
+  function processWheel($event: WheelEvent) {
+    $event.preventDefault();
+
+    animationWheel($event);
+  }
+
+  const animationWheel = createLockedRequestAnimationFrame(($event: WheelEvent) => {
+    const { deltaX } = $event;
+
+    const { left } = tableState.value.scroll;
+
+    tableState.value.update_scroll({ left: left + deltaX });
+    tableState.value.adjust_scroll();
+
+    const _scroll = tableState.value.scroll;
+
+    // 对比滚动条是否发生变化，减少页面渲染
+    if (left === _scroll.left) {
+      return;
+    }
+
+    Object.assign(scroll.value, _scroll);
+  });
+
+  onMounted(() => {
+    if (!headerRef.value) return;
+
+    headerRef.value.addEventListener("wheel", processWheel, { passive: false });
+  })
+
+  return {
+    headerRef,
     scroll
   }
 }

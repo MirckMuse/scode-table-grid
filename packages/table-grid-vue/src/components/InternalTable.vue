@@ -68,8 +68,4 @@ const paginationPosition = computed(() => {
   const _pagination = props.pagination;
   return isObject(_pagination) ? _pagination.vertical ?? "bottom" : "bottom";
 });
-
-onMounted(()=>{
-  console.log(tableBodyRef.value)
-})
 </script>

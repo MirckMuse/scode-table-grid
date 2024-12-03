@@ -42,7 +42,7 @@ export default defineComponent<TableHeaderCellProps>({
     }
 
     return () => {
-      const { ellipsis, column } = props;
+      const { ellipsis, column, colKey } = props;
 
       const cell = renderHeaderCell(column);
 
@@ -62,7 +62,7 @@ export default defineComponent<TableHeaderCellProps>({
       ] as any[]);
 
       // 列宽调整 holder
-      const resizeHolder = column.resizable ? h(ResizeHolder) : null;
+      const resizeHolder = column.resizable ? h(ResizeHolder,{ prefixCls: cellPrefixClass, colKey: colKey }) : null;
 
       // 单元格
       const cellClass = [cellPrefixClass];
