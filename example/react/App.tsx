@@ -7,7 +7,7 @@ function App() {
 
   const tableColumns: TableColumn[] = [
     { title: '列 0', dataIndex: "name", width: 120, fixed: true },
-    { title: '列 1', dataIndex: "name" },
+    { title: '列 1', dataIndex: "name", resizable: true },
     // {
     //   title: "分组列",
     //   children: [
@@ -15,7 +15,7 @@ function App() {
     //     { title: '列 3', dataIndex: "sex" }
     //   ]
     // },
-  
+
     { title: '列 2', dataIndex: "age", },
     { title: '列 3', dataIndex: "sex", },
     { title: '列 4', dataIndex: "sex", width: 200 },

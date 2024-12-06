@@ -1,4 +1,4 @@
-import { useContext, useRef } from "react";
+import { useContext, useRef, useState } from "react";
 import type { TableProps } from "../typing";
 import { OverrideContext } from "./context/OverrideContext";
 import { isObject } from "es-toolkit/compat";
@@ -25,13 +25,19 @@ export function InternalTable(props: TableProps) {
 
   const { tableState, viewport } = useContext(StateContext);
 
+  const [dataSource, setDataSource] = useState(() => tableState.get_viewport_dataset());
+
+  function updateDataSource() {
+    setDataSource(tableState.get_viewport_dataset());
+  }
+
   return (
     <Spin prefixCls={prefixCls!}>
       <>
         {paginationVisible && paginationPosition === 'top' ? Pagination : null}
         <div ref={tableInternalRef} className={tableClass}>
           <TableHeader prefixCls={prefixCls + "-header"}></TableHeader>
-          <TableBody prefixCls={prefixCls} dataSource={tableState.get_viewport_dataset()}></TableBody>
+          <TableBody prefixCls={prefixCls} dataSource={dataSource} updateDataSource={updateDataSource}></TableBody>
         </div>
         {paginationVisible && paginationPosition === 'bottom' ? Pagination : null}
       </>

@@ -9,11 +9,11 @@ import { createLockedRequestAnimationFrame } from "@scode/table-grid-core";
 import { optimizeScrollXY } from "../hooks/useScroll";
 
 export default function (props: TableBodyProps) {
-  const { prefixCls, dataSource } = props;
+  const { prefixCls, dataSource, updateDataSource } = props;
   const tableBodyPrefixCls = prefixCls + "-body";
 
   const { Empty } = useContext(OverrideContext);
-  const { tableState, tableProps, mapToColumn } = useContext(StateContext);
+  const { tableState, tableProps } = useContext(StateContext);
 
   const tableBodyRef = useRef<HTMLDivElement>(null);
   const tableBodyClass = classNames({
@@ -23,6 +23,9 @@ export default function (props: TableBodyProps) {
   // 内部
   const tableBodyInnerRef = useRef<HTMLDivElement>(null);
 
+  const beforeHandler = useRef<HTMLDivElement>(null);
+  const afterHandler = useRef<HTMLDivElement>(null);
+
   const isEmpty = !dataSource.length;
 
   let empty = null;
@@ -30,8 +33,7 @@ export default function (props: TableBodyProps) {
 
   const [scroll, setScroll] = useState(tableState.scroll);
 
-  let verticalScrollbar = null
-  let horizontalScrollbar = null
+  const { viewport, content_box } = tableState;
 
   if (isEmpty) {
     empty = <Empty prefixCls={prefixCls}></Empty>;
@@ -48,8 +50,6 @@ export default function (props: TableBodyProps) {
       last_center_col_keys,
       last_right_col_keys,
       config,
-      viewport,
-      content_box
     } = tableState;
     const colState = tableState.get_col_state();
 
@@ -59,6 +59,7 @@ export default function (props: TableBodyProps) {
       const bodyLeftClass = classNames({
         [`${tableBodyPrefixCls}__inner-fixedLeft`]: true,
         [`${tableProps.prefixCls}-fixedLeft`]: true,
+        shadow: scroll.left > 0
       })
       const bodyLeftStyle = (() => {
         return {
@@ -99,27 +100,26 @@ export default function (props: TableBodyProps) {
     bodyContent = <>
       {fixedLeftBody}
       <div className={bodyCenterClass} style={bodyCenterStyle}>
-        <div className="beforeHandler"></div>
+        <div className="beforeHandler" ref={beforeHandler}></div>
         <BodyRows prefixCls={tableBodyPrefixCls} colKeys={last_center_col_keys} dataSource={dataSource} grid={bodyCenterGrid}></BodyRows>
-        <div className="afterHandler"></div>
+        <div className="afterHandler" ref={afterHandler}></div>
       </div>
       {fixedRightBody}
     </>
-
-    const scrollbarPrefixCls = tableProps.prefixCls + "-scrollbar";
-    const scrollState = (() => {
-      const {
-        mode = "always",
-        position = "inner",
-        size = 6,
-      } = tableProps.scroll ?? {};
-
-      return { mode, position, size };
-    })();
-
-    verticalScrollbar = <Scrollbar prefixCls={scrollbarPrefixCls} client={viewport.height} content={content_box.height} scroll={scroll.top} state={scrollState} vertical={true}></Scrollbar>
-    horizontalScrollbar = <Scrollbar prefixCls={scrollbarPrefixCls} client={viewport.width} content={content_box.width} scroll={scroll.left} state={scrollState}></Scrollbar>
   }
+
+  const scrollbarPrefixCls = tableProps.prefixCls + "-scrollbar";
+  const scrollState = (() => {
+    const {
+      mode = "always",
+      position = "inner",
+      size = 6,
+    } = tableProps.scroll ?? {};
+
+    return { mode, position, size };
+  })();
+  const verticalScrollbar = <Scrollbar prefixCls={scrollbarPrefixCls} client={viewport.height} content={content_box.height} scroll={scroll.top} state={scrollState} vertical={true}></Scrollbar>
+  const horizontalScrollbar = <Scrollbar prefixCls={scrollbarPrefixCls} client={viewport.width} content={content_box.width} scroll={scroll.left} state={scrollState}></Scrollbar>
 
   const animationWheel = createLockedRequestAnimationFrame(($event: WheelEvent) => {
     const { deltaX, deltaY } = $event;
@@ -141,7 +141,7 @@ export default function (props: TableBodyProps) {
       return;
     }
 
-    setScroll(Object.assign(scroll, _scroll));
+    setScroll(Object.assign({}, scroll, _scroll));
   });
 
   function processWheel($event: WheelEvent) {
@@ -150,13 +150,23 @@ export default function (props: TableBodyProps) {
     animationWheel($event);
   }
 
+  const $scrollObserver = new IntersectionObserver(() => { updateDataSource() }, { threshold: 0, rootMargin: "50%" })
+
   useEffect(() => {
     tableBodyInnerRef.current?.addEventListener("wheel", processWheel, { passive: false });
+    if (beforeHandler.current) {
+      $scrollObserver.observe(beforeHandler.current)
+    }
+
+    if (afterHandler.current) {
+      $scrollObserver.observe(afterHandler.current)
+    }
 
     return () => {
       tableBodyInnerRef.current?.removeEventListener("wheel", processWheel);
+      $scrollObserver.disconnect();
     }
-  })
+  });
 
   return (
     <div className={tableBodyClass} ref={tableBodyRef}>

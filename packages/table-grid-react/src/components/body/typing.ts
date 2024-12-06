@@ -4,4 +4,6 @@ export interface TableBodyProps {
   prefixCls: string;
 
   dataSource: RawData[];
+
+  updateDataSource: () => void;
 }

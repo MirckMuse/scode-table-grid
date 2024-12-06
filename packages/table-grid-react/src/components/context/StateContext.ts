@@ -17,6 +17,8 @@ interface IStateContext {
   viewport: IViewport,
 
   mapToColumn: (colKey: ColKey) => TableColumn;
+
+  handleResizeColumn: (colKey: ColKey, new_width: number) => void;
 }
 
 // 创建表格状态。
@@ -32,5 +34,6 @@ export const StateContext = createContext<IStateContext>({
   tableProps: {},
   viewport: { width: 1960, height: 900 },
   isNestDataSource: false,
-  mapToColumn: noop as unknown as MapToColumn
+  mapToColumn: noop as unknown as MapToColumn,
+  handleResizeColumn: noop
 });

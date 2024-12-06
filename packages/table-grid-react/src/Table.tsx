@@ -2,7 +2,8 @@ import type { TableColumn, TableProps } from "./typing";
 import { useRef, useState, useEffect, type CSSProperties, useMemo } from "react";
 import { InternalTable } from "./components/InternalTable";
 import { StateContext } from "./components/context";
-import { TableState, uuid, type ColKey, type TableColumn as CoreTableColumn } from "@scode/table-grid-core";
+import { TableState, createLockedRequestAnimationFrame, uuid, type ColKey, type TableColumn as CoreTableColumn } from "@scode/table-grid-core";
+import { debounce } from "es-toolkit";
 
 
 const DefaultTableProps: TableProps = {
@@ -78,12 +79,44 @@ export function Table(props: TableProps & { style?: CSSProperties }) {
   const { updateColumns, mapToColumn } = createColumnUtils(tableState);
   updateColumns(props.columns ?? []);
 
+  let userSelectState = {
+    pre: "",
+    isSet: false,
+  };
+  const revertTableUserSelect = debounce(() => {
+    userSelectState.isSet = false;
+    if (!tableRef.current) return;
+    tableRef.current.style.userSelect = userSelectState.pre;
+  }, 60);
+
+  const animationUpdate = createLockedRequestAnimationFrame(() => {
+    tableState.reset_content_box_width();
+  });
+
   const StateContextValue = useMemo(() => {
     return {
       tableState,
       mapToColumn,
       viewport,
-      tableProps: rest
+      tableProps: rest,
+      handleResizeColumn: (colKey: ColKey, resizedWidth: number) => {
+        if (!userSelectState.isSet && tableRef.current) {
+          userSelectState.pre = tableRef.current.style.userSelect ?? "";
+          userSelectState.isSet = true;
+          tableRef.current.style.userSelect = "none";
+        }
+
+        // props.onResizeColumn?.(resizedWidth, column);
+        revertTableUserSelect();
+
+        const colState = tableState.get_col_state();
+
+        if (colKey) {
+          colState.update_col_width(colKey, resizedWidth);
+        }
+
+        animationUpdate();
+      }
     }
   }, [])
 
