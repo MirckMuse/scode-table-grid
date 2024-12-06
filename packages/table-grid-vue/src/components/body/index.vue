@@ -77,7 +77,7 @@ const tableBodyRef = shallowRef<HTMLElement>();
 const { scroll, bodyRef: tableBodyInnerRef  }= useBodyScroll();
 
 const updateScroll = createLockedRequestAnimationFrame(() => {
-  Object.assign(scroll.value, tableState.value.scroll);
+  Object.assign(tableState.value.scroll, scroll.value);
 });
 
 const contentBox = computed(() => tableState.value.content_box);

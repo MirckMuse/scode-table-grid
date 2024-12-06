@@ -1,16 +1,19 @@
-import { useContext, useRef } from "react";
 import type { TableBodyProps } from "./typing";
-import BodyRows from "./rows"
 
+import { useContext, useEffect, useRef, useState } from "react";
 import classNames from "classnames";
 import { OverrideContext, StateContext } from "../context";
+import BodyRows from "./rows";
+import Scrollbar from "../scrollbar";
+import { createLockedRequestAnimationFrame } from "@scode/table-grid-core";
+import { optimizeScrollXY } from "../hooks/useScroll";
 
 export default function (props: TableBodyProps) {
   const { prefixCls, dataSource } = props;
   const tableBodyPrefixCls = prefixCls + "-body";
 
   const { Empty } = useContext(OverrideContext);
-  const { tableState, tableProps } = useContext(StateContext);
+  const { tableState, tableProps, mapToColumn } = useContext(StateContext);
 
   const tableBodyRef = useRef<HTMLDivElement>(null);
   const tableBodyClass = classNames({
@@ -25,7 +28,10 @@ export default function (props: TableBodyProps) {
   let empty = null;
   let bodyContent = null;
 
-  const scroll = tableState.scroll;
+  const [scroll, setScroll] = useState(tableState.scroll);
+
+  let verticalScrollbar = null
+  let horizontalScrollbar = null
 
   if (isEmpty) {
     empty = <Empty prefixCls={prefixCls}></Empty>;
@@ -41,7 +47,9 @@ export default function (props: TableBodyProps) {
       last_left_col_keys,
       last_center_col_keys,
       last_right_col_keys,
-      config
+      config,
+      viewport,
+      content_box
     } = tableState;
     const colState = tableState.get_col_state();
 
@@ -60,9 +68,10 @@ export default function (props: TableBodyProps) {
         }
       })();
       const bodyLeftGrid = last_left_col_keys.map(colKey => colState.get_meta(colKey)?.width ?? config.col_width);
+
       fixedLeftBody = (
         <div className={bodyLeftClass} style={bodyLeftStyle}>
-          <BodyRows prefixCls={tableBodyPrefixCls} colKeys={last_left_col_keys} dataSource={dataSource} grid={bodyLeftGrid}></BodyRows>
+          <BodyRows key="fixedLeft" prefixCls={tableBodyPrefixCls} colKeys={last_left_col_keys} dataSource={dataSource} grid={bodyLeftGrid}></BodyRows>
         </div>
       )
     }
@@ -96,13 +105,68 @@ export default function (props: TableBodyProps) {
       </div>
       {fixedRightBody}
     </>
+
+    const scrollbarPrefixCls = tableProps.prefixCls + "-scrollbar";
+    const scrollState = (() => {
+      const {
+        mode = "always",
+        position = "inner",
+        size = 6,
+      } = tableProps.scroll ?? {};
+
+      return { mode, position, size };
+    })();
+
+    verticalScrollbar = <Scrollbar prefixCls={scrollbarPrefixCls} client={viewport.height} content={content_box.height} scroll={scroll.top} state={scrollState} vertical={true}></Scrollbar>
+    horizontalScrollbar = <Scrollbar prefixCls={scrollbarPrefixCls} client={viewport.width} content={content_box.width} scroll={scroll.left} state={scrollState}></Scrollbar>
   }
+
+  const animationWheel = createLockedRequestAnimationFrame(($event: WheelEvent) => {
+    const { deltaX, deltaY } = $event;
+
+    const [optimizeX, optimizeY] = optimizeScrollXY(deltaX, deltaY);
+
+    const { left, top } = tableState.scroll;
+
+    tableState.update_scroll({
+      left: left + optimizeX,
+      top: top + optimizeY
+    });
+    tableState.adjust_scroll();
+
+    const _scroll = tableState.scroll;
+
+    // 对比滚动条是否发生变化，减少页面渲染
+    if (left === _scroll.left && top === _scroll.top) {
+      return;
+    }
+
+    setScroll(Object.assign(scroll, _scroll));
+  });
+
+  function processWheel($event: WheelEvent) {
+    $event.preventDefault();
+
+    animationWheel($event);
+  }
+
+  useEffect(() => {
+    tableBodyInnerRef.current?.addEventListener("wheel", processWheel, { passive: false });
+
+    return () => {
+      tableBodyInnerRef.current?.removeEventListener("wheel", processWheel);
+    }
+  })
+
   return (
     <div className={tableBodyClass} ref={tableBodyRef}>
       <div className={tableBodyPrefixCls + "__inner"} ref={tableBodyInnerRef}>
         {empty}
         {bodyContent}
       </div>
+
+      {verticalScrollbar}
+      {horizontalScrollbar}
     </div>
   )
 }

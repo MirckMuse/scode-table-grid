@@ -63,7 +63,7 @@ export function TableHeader(props: TableHeaderProps) {
     })();
     fixedLeftHeader = (
       <div className={leftColumnsClass} style={leftColumnsStyle}>
-        <HeaderCells prefixCls={prefixCls} colKeys={last_left_col_keys} flattenColKeys={tableState.center_col_keys} mapToColumn={mapToColumn}></HeaderCells>
+        <HeaderCells prefixCls={prefixCls} colKeys={last_left_col_keys} flattenColKeys={tableState.left_col_keys} mapToColumn={mapToColumn}></HeaderCells>
       </div>
     )
   }

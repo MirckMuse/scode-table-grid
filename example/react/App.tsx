@@ -1,7 +1,7 @@
 import { Table, TableColumn } from "@scode/table-grid-react";
 
 function App() {
-  const dataSource = Array(30).fill(0).map((_, i) => {
+  const dataSource = Array(100).fill(0).map((_, i) => {
     return { name: `姓名` + i, age: 10 + i, sex: "难" };
   });
 

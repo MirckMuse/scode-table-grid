@@ -46,7 +46,6 @@ const DefaultScroll = {
   scroll: ref({ top: 0, left: 0 }),
 }
 
-
 export function useBodyScroll() {
   const { bodyRef, scroll } = inject(ScrollKey, DefaultScroll);
 

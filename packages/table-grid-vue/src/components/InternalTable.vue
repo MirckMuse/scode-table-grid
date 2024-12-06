@@ -13,14 +13,14 @@
 </template>
 
 <script lang="ts" setup>
-import { isObject } from "es-toolkit/compat";
-import type { TableProps } from "../typing"
-import { useOverrideInject } from "./context/OverrideContext"
-import { computed, onMounted, shallowRef } from "vue";
-import { useStateInject } from "../hooks";
-import TableHeader from "./header/index.vue"
-import TableBody from "./body/index.vue"
+import type { TableProps } from "../typing";
 
+import { isObject } from "es-toolkit/compat";
+import { computed, shallowRef } from "vue";
+import { useStateInject } from "../hooks";
+import { useOverrideInject } from "./context/OverrideContext";
+import TableHeader from "./header/index.vue";
+import TableBody from "./body/index.vue";
 
 defineOptions({
   name: "SInternalTable",
