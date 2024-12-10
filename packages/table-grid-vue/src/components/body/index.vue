@@ -1,6 +1,6 @@
 <template>
   <div :class="tableBodyPrefixCls" ref="tableBodyRef">
-    
+
     <div :class="tableBodyPrefixCls + '__inner'" :style="tableBodyInnerStyle" ref="tableBodyInnerRef">
       <div v-if="isEmpty" :class="tableBodyPrefixCls + '__empty'">
         <component :is="Empty"></component>
@@ -25,14 +25,16 @@
     </div>
 
     <Scrollbar v-if="!isEmpty" :prefix-cls="scrollbarPrefixCls" :state="scrollState" :vertical="true"
-      :client="viewport.height" :content="tableState.content_box.height" v-model:scroll="scroll.top" @update:scroll="updateScroll">
+      :client="viewport.height" :content="tableState.content_box.height" v-model:scroll="scroll.top"
+      @update:scroll="updateScroll">
     </Scrollbar>
-    <Scrollbar :prefix-cls="scrollbarPrefixCls" :state="scrollState" :client="viewport.width" :content="tableState.content_box.width" v-model:scroll="scroll.left" @update:scroll="updateScroll"></Scrollbar>
+    <Scrollbar :prefix-cls="scrollbarPrefixCls" :state="scrollState" :client="viewport.width"
+      :content="tableState.content_box.width" v-model:scroll="scroll.left" @update:scroll="updateScroll"></Scrollbar>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { createLockedRequestAnimationFrame, type RawData } from '@scode/table-grid-core';
+import { type RawData } from '@scode/table-grid-core';
 import type { StyleValue } from 'vue';
 
 import { computed, onMounted, onUnmounted, reactive, shallowRef, triggerRef } from 'vue';
@@ -51,7 +53,12 @@ defineProps<TableBodyProps>()
 // 能在这一层收集的信息，就全部放在这里
 const { Empty } = useOverrideInject();
 
-const { tableProps, tableState, isNestDataSource } = useStateInject();
+const {
+  tableProps, tableState, isNestDataSource,
+  scroll, updateScroll: _updateScroll,
+  viewport, updateViewport
+} = useStateInject();
+const updateScroll = () => _updateScroll(scroll.value);
 
 const scrollState = computed(() => {
   const {
@@ -74,13 +81,10 @@ const scrollbarPrefixCls = computed(() => tableProps.prefixCls + "-scrollbar");
 const tableBodyRef = shallowRef<HTMLElement>();
 // const tableBodyInnerRef = shallowRef<HTMLElement>();
 
-const { scroll, bodyRef: tableBodyInnerRef  }= useBodyScroll();
+const { bodyRef: tableBodyInnerRef } = useBodyScroll();
 
-const updateScroll = createLockedRequestAnimationFrame(() => {
-  Object.assign(tableState.value.scroll, scroll.value);
-});
 
-const contentBox = computed(() => tableState.value.content_box);
+const contentBox = computed(() => tableState.content_box);
 
 const tableBodyInnerStyle = computed(() => {
   return {}
@@ -90,15 +94,15 @@ const tableBodyInnerStyle = computed(() => {
 const offsetTop = computed(() => {
   const first_raw_data = dataSource.value[0];
 
-  return first_raw_data ? tableState.value.get_row_state().get_y(first_raw_data) : 0;
+  return first_raw_data ? tableState.get_row_state().get_y(first_raw_data) : 0;
 });
 
 const gridTemplateRows = shallowRef<number[]>([]);
 
 function resetGridTemplateRows() {
-  gridTemplateRows.value = tableState.value.get_row_heights(dataSource.value);
+  gridTemplateRows.value = tableState.get_row_heights(dataSource.value);
 
-  if(tableState.value.content_box.height !== contentBox.value.height){
+  if (tableState.content_box.height !== contentBox.value.height) {
     triggerRef(contentBox)
   }
 }
@@ -106,10 +110,10 @@ resetGridTemplateRows();
 
 // 左侧固定列
 const tableBodyLeftRef = shallowRef<HTMLElement>();
-const bodyLeftColKeys = computed(() => tableState.value?.last_left_col_keys ?? []);
-const bodyLeftGrid = computed<number[]>(() =>{
-  const colState = tableState.value.get_col_state();
-  const { config, last_left_col_keys } = tableState.value;
+const bodyLeftColKeys = computed(() => tableState?.last_left_col_keys ?? []);
+const bodyLeftGrid = computed<number[]>(() => {
+  const colState = tableState.get_col_state();
+  const { config, last_left_col_keys } = tableState;
 
   return last_left_col_keys.map(colKey => colState.get_meta(colKey)?.width ?? config.col_width);
 })
@@ -133,10 +137,10 @@ const bodyLeftStyle = computed<StyleValue>(() => {
 
 // 中间列
 const tableBodyCenterRef = shallowRef<HTMLElement>();
-const bodyCenterColKeys = computed(() => tableState.value?.last_center_col_keys ?? []);
+const bodyCenterColKeys = computed(() => tableState?.last_center_col_keys ?? []);
 const bodyCenterGrid = computed<number[]>(() => {
-  const colState = tableState.value.get_col_state();
-  const { config, last_center_col_keys } = tableState.value;
+  const colState = tableState.get_col_state();
+  const { config, last_center_col_keys } = tableState;
 
   return last_center_col_keys.map(colKey => colState.get_meta(colKey)?.width ?? config.col_width);
 });
@@ -147,11 +151,11 @@ const bodyCenterClass = computed(() => {
   }
 });
 const bodyCenterStyle = computed<StyleValue>(() => {
-  const { last_left_col_keys } = tableState.value;
+  const { last_left_col_keys } = tableState;
 
   const rows = [0].concat(gridTemplateRows.value).concat([0]);
 
-  const paddingLeft = tableState.value.get_col_state().get_reduce_width(last_left_col_keys);
+  const paddingLeft = tableState.get_col_state().get_reduce_width(last_left_col_keys);
 
   const style: StyleValue = {
     paddingLeft: (paddingLeft) + 'px',
@@ -165,10 +169,10 @@ const bodyCenterStyle = computed<StyleValue>(() => {
 
 // 右侧固定列
 const tableBodyRightRef = shallowRef<HTMLElement>();
-const bodyRightColKeys = computed(() => tableState.value?.last_right_col_keys ?? []);
+const bodyRightColKeys = computed(() => tableState?.last_right_col_keys ?? []);
 const bodyRightVisible = computed(() => !!bodyRightColKeys.value.length);
 const bodyRightClass = computed(() => {
-  const { viewport, content_box } = tableState.value;
+  const { viewport, content_box } = tableState;
 
   const maxXMove = content_box.width - viewport.width;
 
@@ -185,14 +189,6 @@ const bodyRightStyle = computed<StyleValue>(() => {
 
   return style;
 });
-
-const viewport = computed(() => {
-  const _view = tableState.value.viewport;
-  return {
-    width: _view.width,
-    height: _view.height,
-  }
-})
 
 const isEmpty = computed(() => !dataSource.value.length);
 
@@ -215,22 +211,21 @@ const updateCellSizes = (mutationsList: MutationRecord[]) => {
   // 还可以优化，1.兼容性 2.不用获取全量 cell
   const cells = Array.from(tableBodyRef.value?.querySelectorAll(".s-table-body-cell") ?? []) as HTMLElement[];
   const metas = cells.map(_elementToCellMeta);
-  tableState.value.update_row_cells_size(metas);
+  tableState.update_row_cells_size(metas);
 
   resetGridTemplateRows();
 }
 
 const $cellResize = new MutationObserver(updateCellSizes)
-dataSource.value = tableState.value.get_viewport_dataset();
+dataSource.value = tableState.get_viewport_dataset();
 const $scrollObserver = new IntersectionObserver(() => {
-  dataSource.value = tableState.value.get_viewport_dataset();
+  dataSource.value = tableState.get_viewport_dataset();
 }, { threshold: 0, rootMargin: "10%" })
 
 const $resize = new ResizeObserver((entry) => {
   const el = entry[0];
   const { width, height } = el.contentRect;
-  tableState.value.update_viewport({ width, height });
-  triggerRef(tableState);
+  updateViewport({ width, height });
 });
 
 onMounted(() => {

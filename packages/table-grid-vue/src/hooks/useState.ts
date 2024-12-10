@@ -1,15 +1,15 @@
-import type { ColKey, TableColumn as CoreTableColumn, IViewport } from "@scode/table-grid-core";
-import type { ComputedRef, InjectionKey, ShallowRef } from "vue";
+import type { ColKey, TableColumn as CoreTableColumn, IViewport, Scroll } from "@scode/table-grid-core";
+import type { ComputedRef, InjectionKey, Ref } from "vue";
 import type { TableColumn, TableProps } from "../typing";
 
 import { TableState, createLockedRequestAnimationFrame, uuid } from "@scode/table-grid-core";
 import { debounce, noop } from "es-toolkit";
-import { computed, inject, provide, shallowRef, triggerRef } from "vue";
+import { computed, inject, provide, ref, shallowRef } from "vue";
 
 const TableStateKey: InjectionKey<ITableContext> = Symbol("__table_state__");
 
 export interface ITableContext {
-  tableState: ShallowRef<TableState>;
+  tableState: TableState;
 
   tableProps: Partial<TableProps>;
 
@@ -18,22 +18,28 @@ export interface ITableContext {
   mapToColumn: (colKey: ColKey) => TableColumn;
 
   handleResizeColumn: (colKey: ColKey, new_width: number) => void;
+
+  scroll: Ref<Scroll>;
+  updateScroll: (scroll: Partial<Scroll>) => void;
+
+  viewport: Ref<IViewport>,
+  updateViewport: (viewport: Partial<IViewport>) => void;
 }
 
 const DefaultViewport: IViewport = { width: 1920, height: 900 };
 
+// 创建表格状态。
+const _createTableState = (): TableState => {
+  return TableState.create({
+    config: {},
+    viewport: DefaultViewport,
+  });
+};
+
 export function useStateProvide(props: TableProps) {
   const tableRef = shallowRef<HTMLElement>();
 
-  // 创建表格状态。
-  const _createTableState = (): TableState => {
-    return TableState.create({
-      config: {},
-      viewport: DefaultViewport,
-    });
-  };
-
-  const tableState = shallowRef<TableState>(_createTableState());
+  const tableState = _createTableState();
 
 
   const _columnMap = new Map();
@@ -59,7 +65,7 @@ export function useStateProvide(props: TableProps) {
       return _columns;
     }
 
-    tableState.value.update_columns(_process(columns));
+    tableState.update_columns(_process(columns));
   }
 
   // 是否存在嵌套数据源
@@ -84,9 +90,7 @@ export function useStateProvide(props: TableProps) {
   }, 60);
 
   const animationUpdate = createLockedRequestAnimationFrame(() => {
-    tableState.value.reset_content_box_width();
-
-    triggerRef(tableState);
+    tableState.reset_content_box_width();
   });
 
   const handleResizeColumn = (colKey: ColKey, resizedWidth: number) => {
@@ -99,7 +103,7 @@ export function useStateProvide(props: TableProps) {
     // props.onResizeColumn?.(resizedWidth, column);
     revertTableUserSelect();
 
-    const colState = tableState.value.get_col_state();
+    const colState = tableState.get_col_state();
 
     if (colKey) {
       colState.update_col_width(colKey, resizedWidth);
@@ -108,12 +112,39 @@ export function useStateProvide(props: TableProps) {
     animationUpdate();
   }
 
+  // 可见视图
+  const viewport = ref({
+    width: tableState.viewport.width,
+    height: tableState.viewport.height
+  });
+  const animationUpdateViewport = createLockedRequestAnimationFrame((new_viewport: IViewport) => {
+    tableState.update_viewport(new_viewport);
+  });
+  const updateViewport = (new_viewport: Partial<IViewport>) => {
+    animationUpdateViewport(Object.assign(viewport.value, new_viewport));
+  }
+
+  // 滚动条
+  const scroll = ref<Scroll>({ top: 0, left: 0 });
+  const animationUpdateScroll = createLockedRequestAnimationFrame((new_scroll: Scroll) => {
+    tableState.update_scroll(new_scroll);
+    tableState.adjust_scroll();
+  });
+  const updateScroll = (new_scroll: Partial<Scroll>) => {
+    animationUpdateScroll(Object.assign(scroll.value, new_scroll));
+  }
+
   provide(TableStateKey, {
-    tableState: tableState as ShallowRef<TableState>,
+    tableState: tableState,
     tableProps: props,
     isNestDataSource,
     mapToColumn: (colKey: ColKey) => _columnMap.get(colKey),
-    handleResizeColumn
+    handleResizeColumn,
+
+
+    scroll, updateScroll,
+
+    viewport, updateViewport
   });
 
   return {
@@ -125,10 +156,15 @@ export function useStateProvide(props: TableProps) {
 
 export function useStateInject() {
   return inject(TableStateKey, {
-    tableState: shallowRef(),
+    tableState: _createTableState(),
     tableProps: {},
     isNestDataSource: computed(() => false),
     mapToColumn: noop as any,
-    handleResizeColumn: noop
+    handleResizeColumn: noop,
+
+    // 滚动
+    scroll: ref({ top: 0, left: 0 }), updateScroll: noop,
+    // 可见窗口
+    viewport: ref(DefaultViewport), updateViewport: noop
   });
 }

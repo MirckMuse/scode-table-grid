@@ -32,9 +32,9 @@ import HeaderCells from "./cells.vue";
 
 const props = defineProps<TableHeaderProps>()
 
-const { tableState, tableProps, mapToColumn } = useStateInject();
+const { tableState, tableProps, mapToColumn, scroll } = useStateInject();
 
-const { scroll, headerRef: tableHeaderCenterRef } = useHeaderScroll();
+const { headerRef: tableHeaderCenterRef } = useHeaderScroll();
 
 // 表头
 const tableHeaderRef = shallowRef<HTMLElement>();
@@ -49,12 +49,12 @@ const tableHeaderStyle = computed<StyleValue>(() => {
 // 左侧表头
 const tableHeaderLeftRef = shallowRef<HTMLElement>();
 const leftColumnsVisible = computed(() => {
-  const { last_left_col_keys = [] } = tableState.value || {};
+  const { last_left_col_keys = [] } = tableState || {};
   return !!last_left_col_keys.length;
 });
 const leftColumnsClass = computed(() => {
   const { prefixCls } = props;
-  const { prefixCls: _prefixCls} = tableProps;
+  const { prefixCls: _prefixCls } = tableProps;
   return {
     [`${_prefixCls}-fixedLeft`]: true,
     [`${prefixCls}__inner-fixedLeft`]: true,
@@ -63,11 +63,11 @@ const leftColumnsClass = computed(() => {
 });
 const leftColumnsStyle = computed<StyleValue>(() => {
   const style: StyleValue = {};
-  const colState = tableState.value.get_col_state()
+  const colState = tableState.get_col_state()
 
   const deepest = colState.get_deepest() + 1;
 
-  const { last_left_col_keys, config } = tableState.value;
+  const { last_left_col_keys, config } = tableState;
 
   style.gridTemplateRows = "repeat(" + deepest + ", 52px)";
   style.gridTemplateColumns = last_left_col_keys
@@ -88,13 +88,13 @@ const centerColumnsClass = computed(() => {
 });
 const centerColumnsStyle = computed<StyleValue>(() => {
   const style: StyleValue = {};
-  const colState = tableState.value.get_col_state()
+  const colState = tableState.get_col_state()
 
   const deepest = colState.get_deepest() + 1;
 
-  const { last_left_col_keys, last_center_col_keys, config} = tableState.value;
+  const { last_left_col_keys, last_center_col_keys, config } = tableState;
 
-  style.paddingLeft = colState.get_reduce_width(last_left_col_keys) +'px';
+  style.paddingLeft = colState.get_reduce_width(last_left_col_keys) + 'px';
   style.gridTemplateRows = "repeat(" + deepest + ", 52px)";
   style.transform = `translateX(${-scroll.value.left}px)`
   style.gridTemplateColumns = last_center_col_keys
@@ -108,7 +108,7 @@ const centerColumnsStyle = computed<StyleValue>(() => {
 
 // 右侧表头
 const tableHeaderRightRef = shallowRef<HTMLElement>();
-const rightColumnsVisible = computed(() => !!tableState.value.last_right_col_keys.length);
+const rightColumnsVisible = computed(() => !!tableState.last_right_col_keys.length);
 const rightColumnsClass = computed(() => []);
 const rightColumnsStyle = computed<StyleValue>(() => {
   return {}

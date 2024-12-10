@@ -18,7 +18,7 @@ const props = defineProps<TableHeaderCellsProps>();
 
 const { tableState } = useStateInject();
 
-const col_state = tableState.value.get_col_state();
+const col_state = tableState.get_col_state();
 
 const columnBinds = computed(() => {
   const { flattenColKeys, mapToColumn, prefixCls } = props;

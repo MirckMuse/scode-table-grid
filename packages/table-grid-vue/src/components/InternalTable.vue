@@ -17,7 +17,6 @@ import type { TableProps } from "../typing";
 
 import { isObject } from "es-toolkit/compat";
 import { computed, shallowRef } from "vue";
-import { useStateInject } from "../hooks";
 import { useOverrideInject } from "./context/OverrideContext";
 import TableHeader from "./header/index.vue";
 import TableBody from "./body/index.vue";
@@ -31,8 +30,6 @@ const props = defineProps<TableProps>();
 const slots = defineSlots();
 
 const { Spin, Pagination } = useOverrideInject();
-
-const { tableState } = useStateInject();
 
 const tableClass = computed(() => {
   const { prefixCls, bordered } = props;

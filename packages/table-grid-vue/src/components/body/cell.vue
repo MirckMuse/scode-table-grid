@@ -82,9 +82,9 @@ export default defineComponent<TableBodyCellProps>({
 
       const contentVNodes = renderCustomCell(props, text, title);
 
-      const meta = isMergedCell ? tableState.value.get_merged_cell_meta(rowKey, colKey) : null;
+      const meta = isMergedCell ? tableState.get_merged_cell_meta(rowKey, colKey) : null;
 
-      const scroll = tableState.value.scroll;
+      const scroll = tableState.scroll;
 
       const cellClass = {
         [cellPrefixCls]: true,

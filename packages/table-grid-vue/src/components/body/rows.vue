@@ -26,8 +26,8 @@ const props = defineProps<BodyRowsProps>();
 
 const { tableState, mapToColumn } = useStateInject();
 
-const getRowKey = tableState.value.config.get_row_key;
-const rowState = tableState.value.get_row_state();
+const getRowKey = tableState.config.get_row_key;
+const rowState = tableState.get_row_state();
 
 const computedColumns = computed(() => {
   return props.colKeys.map(colKey => {
