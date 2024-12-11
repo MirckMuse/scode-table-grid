@@ -21,9 +21,17 @@
   bottom: 0;
 }
 
+.s-table-scrollbar__track.inner.cross {
+  width: calc(100% - var(--table-scroll-size));
+
+  &.vertical {
+    height: calc(100% - var(--table-scroll-size));
+  }
+}
+
 .s-table-scrollbar__track.inner {
   z-index: 1;
-  width: calc(100% - var(--table-scroll-size));
+  width: 100%;
   height: var(--table-scroll-size);
 
   &.vertical {

@@ -1,12 +1,29 @@
-import type { ColKey, TableColumn as CoreTableColumn, IViewport, Scroll } from "@scode/table-grid-core";
-import type { ComputedRef, InjectionKey, Ref } from "vue";
+import type { Box, ColKey, TableColumn as CoreTableColumn, IViewport, Scroll } from "@scode/table-grid-core";
+import type { ComputedRef, InjectionKey, Ref, ShallowRef } from "vue";
 import type { TableColumn, TableProps } from "../typing";
 
 import { TableState, createLockedRequestAnimationFrame, uuid } from "@scode/table-grid-core";
 import { debounce, noop } from "es-toolkit";
-import { computed, inject, provide, ref, shallowRef } from "vue";
+import { computed, inject, provide, ref, shallowRef, triggerRef } from "vue";
 
 const TableStateKey: InjectionKey<ITableContext> = Symbol("__table_state__");
+
+interface LayoutGrid {
+  row: {
+    header: number[],
+    body: number[],
+  },
+  col: {
+    left: number[],
+    center: number[],
+    right: number[],
+  }
+}
+
+const DefaultLayoutGrid: LayoutGrid = {
+  row: { header: [], body: [] },
+  col: { left: [], center: [], right: [] },
+};
 
 export interface ITableContext {
   tableState: TableState;
@@ -21,12 +38,42 @@ export interface ITableContext {
 
   scroll: Ref<Scroll>;
   updateScroll: (scroll: Partial<Scroll>) => void;
+  hScrollbarVisible: ComputedRef<boolean>;
+  vScrollbarVisible: ComputedRef<boolean>;
 
   viewport: Ref<IViewport>,
   updateViewport: (viewport: Partial<IViewport>) => void;
+
+  contentBox: ComputedRef<Box>;
+
+  layoutGrid: ShallowRef<LayoutGrid>;
 }
 
 const DefaultViewport: IViewport = { width: 1920, height: 900 };
+
+const useLayout = (tableState: TableState) => {
+  const layoutGrid = shallowRef<LayoutGrid>(DefaultLayoutGrid);
+  const { config } = tableState;
+
+  const _getWidth = (colKey: ColKey) => tableState.get_col_state().get_meta(colKey)?.width ?? config.col_width;
+
+  updateLayoutGrid()
+
+  function updateLayoutGrid() {
+    // TODO: 其实有很多不必要的计算，所有功能做完后，考虑细节优化
+    const { last_left_col_keys, last_center_col_keys, last_right_col_keys } = tableState;
+
+    layoutGrid.value = Object.assign({}, layoutGrid.value, {
+      col: {
+        left: last_left_col_keys.map(_getWidth),
+        center: last_center_col_keys.map(_getWidth),
+        right: last_right_col_keys.map(_getWidth)
+      }
+    });
+  }
+
+  return { layoutGrid, updateLayoutGrid };
+}
 
 // 创建表格状态。
 const _createTableState = (): TableState => {
@@ -64,8 +111,9 @@ export function useStateProvide(props: TableProps) {
 
       return _columns;
     }
-
     tableState.update_columns(_process(columns));
+
+    updateLayoutGrid();
   }
 
   // 是否存在嵌套数据源
@@ -89,8 +137,12 @@ export function useStateProvide(props: TableProps) {
     tableRef.value.style.userSelect = userSelectState.pre;
   }, 60);
 
+  const { layoutGrid, updateLayoutGrid } = useLayout(tableState);
+
   const animationUpdate = createLockedRequestAnimationFrame(() => {
     tableState.reset_content_box_width();
+
+    updateLayoutGrid();
   });
 
   const handleResizeColumn = (colKey: ColKey, resizedWidth: number) => {
@@ -122,17 +174,23 @@ export function useStateProvide(props: TableProps) {
   });
   const updateViewport = (new_viewport: Partial<IViewport>) => {
     animationUpdateViewport(Object.assign(viewport.value, new_viewport));
-  }
+  };
+
+  // TODO: 内容高度, 一个计算的内容高度
+  const contentBox = computed(() => tableState.content_box);
 
   // 滚动条
   const scroll = ref<Scroll>({ top: 0, left: 0 });
+  const hScrollbarVisible = computed(() => contentBox.value.width > viewport.value.width);
+  const vScrollbarVisible = computed(() => contentBox.value.height > viewport.value.height);
   const animationUpdateScroll = createLockedRequestAnimationFrame((new_scroll: Scroll) => {
     tableState.update_scroll(new_scroll);
     tableState.adjust_scroll();
   });
   const updateScroll = (new_scroll: Partial<Scroll>) => {
     animationUpdateScroll(Object.assign(scroll.value, new_scroll));
-  }
+  };
+
 
   provide(TableStateKey, {
     tableState: tableState,
@@ -141,10 +199,15 @@ export function useStateProvide(props: TableProps) {
     mapToColumn: (colKey: ColKey) => _columnMap.get(colKey),
     handleResizeColumn,
 
+    // 滚动条
+    scroll, updateScroll, hScrollbarVisible, vScrollbarVisible,
 
-    scroll, updateScroll,
+    // 可视界面
+    viewport, updateViewport,
 
-    viewport, updateViewport
+    contentBox,
+
+    layoutGrid
   });
 
   return {
@@ -164,7 +227,14 @@ export function useStateInject() {
 
     // 滚动
     scroll: ref({ top: 0, left: 0 }), updateScroll: noop,
+
+    hScrollbarVisible: computed(() => false), vScrollbarVisible: computed(() => false),
+
     // 可见窗口
-    viewport: ref(DefaultViewport), updateViewport: noop
+    viewport: ref(DefaultViewport), updateViewport: noop,
+
+    contentBox: computed(() => DefaultViewport),
+
+    layoutGrid: shallowRef(DefaultLayoutGrid),
   });
 }

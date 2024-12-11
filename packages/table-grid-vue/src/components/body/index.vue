@@ -8,28 +8,29 @@
 
       <template v-else>
         <div v-if="bodyLeftVisible" ref="tableBodyLeftRef" :class="bodyLeftClass" :style="bodyLeftStyle">
-          <BodyRows :col-keys="bodyLeftColKeys" :grid="bodyLeftGrid" v-bind="commonRowProps"></BodyRows>
+          <BodyRows :col-keys="bodyLeftColKeys" :grid="layoutGrid.col.left" v-bind="commonRowProps"></BodyRows>
         </div>
 
 
         <div ref="tableBodyCenterRef" :class="bodyCenterClass" :style="bodyCenterStyle">
           <div ref="beforeHandler" class="beforeHandler"></div>
-          <BodyRows :col-keys="bodyCenterColKeys" :grid="bodyCenterGrid" v-bind="commonRowProps"></BodyRows>
+          <BodyRows :col-keys="bodyCenterColKeys" :grid="layoutGrid.col.center" v-bind="commonRowProps"></BodyRows>
           <div ref="afterHandler" class="afterHandler"></div>
         </div>
 
         <div v-if="bodyRightVisible" ref="tableBodyRightRef" :class="bodyRightClass" :style="bodyRightStyle">
-          <BodyRows :col-keys="bodyRightColKeys" :grid="[]" v-bind="commonRowProps"></BodyRows>
+          <BodyRows :col-keys="bodyRightColKeys" :grid="layoutGrid.col.right" v-bind="commonRowProps"></BodyRows>
         </div>
       </template>
     </div>
 
     <Scrollbar v-if="!isEmpty" :prefix-cls="scrollbarPrefixCls" :state="scrollState" :vertical="true"
-      :client="viewport.height" :content="tableState.content_box.height" v-model:scroll="scroll.top"
-      @update:scroll="updateScroll">
+      :client="viewport.height" :content="contentBox.height" v-model:scroll="scroll.top" @update:scroll="updateScroll"
+      :cross-visible="hScrollbarVisible">
     </Scrollbar>
     <Scrollbar :prefix-cls="scrollbarPrefixCls" :state="scrollState" :client="viewport.width"
-      :content="tableState.content_box.width" v-model:scroll="scroll.left" @update:scroll="updateScroll"></Scrollbar>
+      :content="contentBox.width" v-model:scroll="scroll.left" @update:scroll="updateScroll"
+      :cross-visible="vScrollbarVisible"></Scrollbar>
   </div>
 </template>
 
@@ -56,8 +57,14 @@ const { Empty } = useOverrideInject();
 const {
   tableProps, tableState, isNestDataSource,
   scroll, updateScroll: _updateScroll,
-  viewport, updateViewport
+
+  hScrollbarVisible, vScrollbarVisible,
+  viewport, updateViewport,
+
+  contentBox,
+  layoutGrid
 } = useStateInject();
+
 const updateScroll = () => _updateScroll(scroll.value);
 
 const scrollState = computed(() => {
@@ -82,9 +89,6 @@ const tableBodyRef = shallowRef<HTMLElement>();
 // const tableBodyInnerRef = shallowRef<HTMLElement>();
 
 const { bodyRef: tableBodyInnerRef } = useBodyScroll();
-
-
-const contentBox = computed(() => tableState.content_box);
 
 const tableBodyInnerStyle = computed(() => {
   return {}
@@ -111,12 +115,6 @@ resetGridTemplateRows();
 // 左侧固定列
 const tableBodyLeftRef = shallowRef<HTMLElement>();
 const bodyLeftColKeys = computed(() => tableState?.last_left_col_keys ?? []);
-const bodyLeftGrid = computed<number[]>(() => {
-  const colState = tableState.get_col_state();
-  const { config, last_left_col_keys } = tableState;
-
-  return last_left_col_keys.map(colKey => colState.get_meta(colKey)?.width ?? config.col_width);
-})
 const bodyLeftVisible = computed(() => !!bodyLeftColKeys.value.length);
 const bodyLeftClass = computed(() => {
   return {
@@ -138,14 +136,7 @@ const bodyLeftStyle = computed<StyleValue>(() => {
 // 中间列
 const tableBodyCenterRef = shallowRef<HTMLElement>();
 const bodyCenterColKeys = computed(() => tableState?.last_center_col_keys ?? []);
-const bodyCenterGrid = computed<number[]>(() => {
-  const colState = tableState.get_col_state();
-  const { config, last_center_col_keys } = tableState;
-
-  return last_center_col_keys.map(colKey => colState.get_meta(colKey)?.width ?? config.col_width);
-});
 const bodyCenterClass = computed(() => {
-
   return {
     [`${tableBodyPrefixCls.value}__inner-center`]: true,
   }

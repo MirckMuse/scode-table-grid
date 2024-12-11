@@ -32,7 +32,7 @@ import HeaderCells from "./cells.vue";
 
 const props = defineProps<TableHeaderProps>()
 
-const { tableState, tableProps, mapToColumn, scroll } = useStateInject();
+const { tableState, tableProps, mapToColumn, scroll, layoutGrid } = useStateInject();
 
 const { headerRef: tableHeaderCenterRef } = useHeaderScroll();
 
@@ -67,13 +67,9 @@ const leftColumnsStyle = computed<StyleValue>(() => {
 
   const deepest = colState.get_deepest() + 1;
 
-  const { last_left_col_keys, config } = tableState;
-
   style.gridTemplateRows = "repeat(" + deepest + ", 52px)";
-  style.gridTemplateColumns = last_left_col_keys
-    .map(colKey => {
-      return (colState.get_meta(colKey)?.width ?? config.col_width) + 'px';
-    })
+  style.gridTemplateColumns = layoutGrid.value.col.left
+    .map(_w => _w + 'px')
     .join(' ');
 
   return style;
@@ -92,16 +88,12 @@ const centerColumnsStyle = computed<StyleValue>(() => {
 
   const deepest = colState.get_deepest() + 1;
 
-  const { last_left_col_keys, last_center_col_keys, config } = tableState;
+  const { left, center } = layoutGrid.value.col;
 
-  style.paddingLeft = colState.get_reduce_width(last_left_col_keys) + 'px';
+  style.paddingLeft = left.reduce((aw, w) => aw + w, 0) + 'px';
   style.gridTemplateRows = "repeat(" + deepest + ", 52px)";
   style.transform = `translateX(${-scroll.value.left}px)`
-  style.gridTemplateColumns = last_center_col_keys
-    .map(colKey => {
-      return (colState.get_meta(colKey)?.width ?? config.col_width) + 'px';
-    })
-    .join(' ');
+  style.gridTemplateColumns = center.map(_w => _w + 'px').join(' ');
 
   return style;
 });

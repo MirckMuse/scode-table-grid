@@ -10,7 +10,6 @@ import { computed, shallowRef } from 'vue';
 
 
 interface ScrollbarProps {
-
   state: Partial<TableScroll>;
 
   prefixCls: string;
@@ -20,6 +19,8 @@ interface ScrollbarProps {
   client: number;
 
   content: number;
+
+  crossVisible: boolean;
 }
 
 // 浏览器是向下取整的，会有 1px 的误差
@@ -48,10 +49,10 @@ const computedthumbSize = computed(() => Math.max(ratio.value * props.client, 1)
 const thumbSize = computed(() => Math.max(computedthumbSize.value, MIN_THUMB_SIZE));
 
 const thumbStyle = computed(() => {
-  let { client, content } = props;
-  if (props.state?.position === 'inner') {
-    // TODO: 交叉轴有的时候，才需要做减法
-    // client = client - (props.state?.size ?? 6);
+  let { client, content, crossVisible } = props;
+  if (crossVisible && props.state?.position === 'inner') {
+    // 交叉轴有的时候，才需要做减法
+    client = client - (props.state?.size ?? 6);
   }
 
   if (client === content) {
@@ -71,10 +72,11 @@ const thumbStyle = computed(() => {
 });
 
 const scrollbarClass = computed(() => {
-  const { prefixCls, vertical, state } = props;
+  const { prefixCls, vertical, state, crossVisible } = props;
   return {
     [`${prefixCls}__track`]: true,
     [`vertical`]: vertical,
+    cross: crossVisible,
     [`${state.position}`]: true,
   };
 });

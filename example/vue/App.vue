@@ -1,5 +1,7 @@
 <template>
-  <STable :columns="tableColumns" :data-source="dataSource" style="height: 600px;" :bordered="true"></STable>
+  <div style="padding: 24px;">
+    <STable :columns="tableColumns" :data-source="dataSource" style="height: 600px;" :bordered="true"></STable>
+  </div>
 </template>
 
 <script lang="ts" setup>
