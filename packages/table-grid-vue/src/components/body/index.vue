@@ -211,7 +211,7 @@ const $cellResize = new MutationObserver(updateCellSizes)
 dataSource.value = tableState.get_viewport_dataset();
 const $scrollObserver = new IntersectionObserver(() => {
   dataSource.value = tableState.get_viewport_dataset();
-}, { threshold: 0, rootMargin: "10%" })
+}, { threshold: 0, rootMargin: "50%" })
 
 const $resize = new ResizeObserver((entry) => {
   const el = entry[0];

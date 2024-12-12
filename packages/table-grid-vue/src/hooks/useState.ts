@@ -1,29 +1,13 @@
 import type { Box, ColKey, TableColumn as CoreTableColumn, IViewport, Scroll } from "@scode/table-grid-core";
-import type { ComputedRef, InjectionKey, Ref, ShallowRef } from "vue";
+import type { ComputedRef, InjectionKey, Ref } from "vue";
 import type { TableColumn, TableProps } from "../typing";
 
 import { TableState, createLockedRequestAnimationFrame, uuid } from "@scode/table-grid-core";
 import { debounce, noop } from "es-toolkit";
-import { computed, inject, provide, ref, shallowRef, triggerRef } from "vue";
+import { computed, inject, provide, reactive, ref, shallowRef } from "vue";
+import { DefaultLayoutGrid, useLayout, type LayoutGrid } from "./useLayout";
 
 const TableStateKey: InjectionKey<ITableContext> = Symbol("__table_state__");
-
-interface LayoutGrid {
-  row: {
-    header: number[],
-    body: number[],
-  },
-  col: {
-    left: number[],
-    center: number[],
-    right: number[],
-  }
-}
-
-const DefaultLayoutGrid: LayoutGrid = {
-  row: { header: [], body: [] },
-  col: { left: [], center: [], right: [] },
-};
 
 export interface ITableContext {
   tableState: TableState;
@@ -46,34 +30,11 @@ export interface ITableContext {
 
   contentBox: ComputedRef<Box>;
 
-  layoutGrid: ShallowRef<LayoutGrid>;
+  layoutGrid: LayoutGrid;
 }
 
 const DefaultViewport: IViewport = { width: 1920, height: 900 };
 
-const useLayout = (tableState: TableState) => {
-  const layoutGrid = shallowRef<LayoutGrid>(DefaultLayoutGrid);
-  const { config } = tableState;
-
-  const _getWidth = (colKey: ColKey) => tableState.get_col_state().get_meta(colKey)?.width ?? config.col_width;
-
-  updateLayoutGrid()
-
-  function updateLayoutGrid() {
-    // TODO: 其实有很多不必要的计算，所有功能做完后，考虑细节优化
-    const { last_left_col_keys, last_center_col_keys, last_right_col_keys } = tableState;
-
-    layoutGrid.value = Object.assign({}, layoutGrid.value, {
-      col: {
-        left: last_left_col_keys.map(_getWidth),
-        center: last_center_col_keys.map(_getWidth),
-        right: last_right_col_keys.map(_getWidth)
-      }
-    });
-  }
-
-  return { layoutGrid, updateLayoutGrid };
-}
 
 // 创建表格状态。
 const _createTableState = (): TableState => {
@@ -137,12 +98,12 @@ export function useStateProvide(props: TableProps) {
     tableRef.value.style.userSelect = userSelectState.pre;
   }, 60);
 
-  const { layoutGrid, updateLayoutGrid } = useLayout(tableState);
+  const { layoutGrid, updateLayoutGrid, updateColLayoutGrid } = useLayout(tableState);
 
   const animationUpdate = createLockedRequestAnimationFrame(() => {
     tableState.reset_content_box_width();
 
-    updateLayoutGrid();
+    updateColLayoutGrid();
   });
 
   const handleResizeColumn = (colKey: ColKey, resizedWidth: number) => {
@@ -235,6 +196,6 @@ export function useStateInject() {
 
     contentBox: computed(() => DefaultViewport),
 
-    layoutGrid: shallowRef(DefaultLayoutGrid),
+    layoutGrid: reactive(DefaultLayoutGrid),
   });
 }

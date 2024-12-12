@@ -68,7 +68,7 @@ const leftColumnsStyle = computed<StyleValue>(() => {
   const deepest = colState.get_deepest() + 1;
 
   style.gridTemplateRows = "repeat(" + deepest + ", 52px)";
-  style.gridTemplateColumns = layoutGrid.value.col.left
+  style.gridTemplateColumns = layoutGrid.col.left
     .map(_w => _w + 'px')
     .join(' ');
 
@@ -88,7 +88,7 @@ const centerColumnsStyle = computed<StyleValue>(() => {
 
   const deepest = colState.get_deepest() + 1;
 
-  const { left, center } = layoutGrid.value.col;
+  const { left, center } = layoutGrid.col;
 
   style.paddingLeft = left.reduce((aw, w) => aw + w, 0) + 'px';
   style.gridTemplateRows = "repeat(" + deepest + ", 52px)";
