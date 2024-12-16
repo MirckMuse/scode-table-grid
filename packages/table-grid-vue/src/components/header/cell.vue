@@ -1,9 +1,11 @@
 <script lang="ts">
 import type { TableHeaderCellProps } from "./typing";
 import type { StyleValue, VNode } from 'vue';
+import type { TableColumn } from "../../typing";
+
 import { h, defineComponent } from 'vue';
 import ResizeHolder from "./ResizeHolder.vue";
-import type { TableColumn } from "../../typing";
+import Sorter from "../sorter/index.vue";
 
 // 渲染用户配置的 title
 function renderColumnTitle(column: TableColumn) {
@@ -26,6 +28,10 @@ export default defineComponent<TableHeaderCellProps>({
       const appendVNodes: VNode[] = [];
 
       // 渲染排序
+
+      if (column.sorter) {
+        appendVNodes.push(h(Sorter, { prefixCls: cellPrefixClass }))
+      }
 
       // 渲染筛选
 
@@ -62,7 +68,7 @@ export default defineComponent<TableHeaderCellProps>({
       ] as any[]);
 
       // 列宽调整 holder
-      const resizeHolder = column.resizable ? h(ResizeHolder,{ prefixCls: cellPrefixClass, colKey: colKey }) : null;
+      const resizeHolder = column.resizable ? h(ResizeHolder, { prefixCls: cellPrefixClass, colKey: colKey }) : null;
 
       // 单元格
       const cellClass = [cellPrefixClass];

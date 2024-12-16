@@ -40,20 +40,20 @@ export const useLayout = (tableState: TableState) => {
   });
   const { config } = tableState;
 
-  const _getWidth = (colKey: ColKey) => tableState.get_col_state().get_meta(colKey)?.width ?? config.col_width;
-  // function updateColLayoutGrid() {
+  const colState = tableState.get_col_state();
 
-  // }
-
+  const _getWidth = (colKey: ColKey) => colState.get_meta(colKey)?.width ?? config.col_width;
 
   const updateColLayoutGrid = throttle(() => {
     const { last_left_col_keys, last_center_col_keys, last_right_col_keys } = tableState;
+
     colLayoutGrid.value = {
       left: last_left_col_keys.map(_getWidth),
       center: last_center_col_keys.map(_getWidth),
       right: last_right_col_keys.map(_getWidth)
     }
   }, 16);
+
   updateLayoutGrid()
 
   function updateRowLayoutGrid() {

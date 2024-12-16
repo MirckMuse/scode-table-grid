@@ -7,7 +7,8 @@ import type {
   Scroll,
   Pagination,
   TableColumn,
-  Box
+  Box,
+  SorterState
 } from "./types";
 import type { CellMeta, MergedCellMeta } from "./cell";
 
@@ -384,5 +385,16 @@ export class TableState {
     });
 
     this.reset_content_box_width();
+  }
+
+  // ================== Sorter State ==================
+  get_sorter_states(): Option<SorterState[]> {
+    // TODO:
+    return [];
+  }
+
+  get_sorter_state(col_key: ColKey): Option<SorterState> {
+    // TODO:
+    return null;
   }
 }

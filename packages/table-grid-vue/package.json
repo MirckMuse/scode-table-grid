@@ -21,6 +21,7 @@
     "vue": ">= 3"
   },
   "dependencies": {
+    "@remixicon/vue": "^4.5.0",
     "@scode/table-grid-core": "workspace:*"
   },
   "keywords": [

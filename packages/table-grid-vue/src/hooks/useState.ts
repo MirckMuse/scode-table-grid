@@ -151,8 +151,7 @@ export function useStateProvide(props: TableProps) {
   const updateScroll = (new_scroll: Partial<Scroll>) => {
     animationUpdateScroll(Object.assign(scroll.value, new_scroll));
   };
-
-
+  
   provide(TableStateKey, {
     tableState: tableState,
     tableProps: props,

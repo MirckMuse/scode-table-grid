@@ -54,6 +54,9 @@ importers:
       less:
         specifier: ^4.2.0
         version: 4.2.0
+      remixicon:
+        specifier: ^4.5.0
+        version: 4.5.0
       rimraf:
         specifier: ^6.0.1
         version: 6.0.1
@@ -88,9 +91,15 @@ importers:
 
   packages/table-grid-vue:
     dependencies:
+      '@remixicon/vue':
+        specifier: ^4.5.0
+        version: 4.5.0(vue@3.5.12(typescript@5.6.3))
       '@scode/table-grid-core':
         specifier: workspace:*
         version: link:../table-grid-core
+      remixicon:
+        specifier: ^4.5.0
+        version: 4.5.0
       vue:
         specifier: '>= 3'
         version: 3.5.12(typescript@5.6.3)
@@ -405,6 +414,11 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==, tarball: https://registry.npmmirror.com/@jridgewell/trace-mapping/-/trace-mapping-0.3.25.tgz}
+
+  '@remixicon/vue@4.5.0':
+    resolution: {integrity: sha512-pXIfHwk8LbKI1mresIx0ifwj3+i7+3Ns0AAPuXhQvGnnrNfbFTyNt+x9HcNxGVIKc9r+d15e8aMDSyGO5s/aVQ==, tarball: https://registry.npmmirror.com/@remixicon/vue/-/vue-4.5.0.tgz}
+    peerDependencies:
+      vue: '>= 3'
 
   '@rollup/rollup-android-arm-eabi@4.25.0':
     resolution: {integrity: sha512-CC/ZqFZwlAIbU1wUPisHyV/XRc5RydFrNLtgl3dGYskdwPZdt4HERtKm50a/+DtTlKeCq9IXFEWR+P6blwjqBA==, tarball: https://registry.npmmirror.com/@rollup/rollup-android-arm-eabi/-/rollup-android-arm-eabi-4.25.0.tgz}
@@ -866,6 +880,9 @@ packages:
     resolution: {integrity: sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==, tarball: https://registry.npmmirror.com/react/-/react-18.3.1.tgz}
     engines: {node: '>=0.10.0'}
 
+  remixicon@4.5.0:
+    resolution: {integrity: sha512-IP/wNQGG3JCigaeFF3DERSTqMIZBlNu1yu8clNGB7wFe7ZN/ueKMplFHL5uEbnGpCzqfY6MlxIYn2vRzub+5cQ==, tarball: https://registry.npmmirror.com/remixicon/-/remixicon-4.5.0.tgz}
+
   rimraf@6.0.1:
     resolution: {integrity: sha512-9dkvaxAsk/xNXSJzMgFqqMCuFgt2+KsOFek3TMLfo8NCPfWpBmqwyNn5Y+NX56QUYfCtsyhF3ayiboEoUmJk/A==, tarball: https://registry.npmmirror.com/rimraf/-/rimraf-6.0.1.tgz}
     engines: {node: 20 || >=22}
@@ -1272,6 +1289,10 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
+
+  '@remixicon/vue@4.5.0(vue@3.5.12(typescript@5.6.3))':
+    dependencies:
+      vue: 3.5.12(typescript@5.6.3)
 
   '@rollup/rollup-android-arm-eabi@4.25.0':
     optional: true
@@ -1716,6 +1737,8 @@ snapshots:
   react@18.3.1:
     dependencies:
       loose-envify: 1.4.0
+
+  remixicon@4.5.0: {}
 
   rimraf@6.0.1:
     dependencies:

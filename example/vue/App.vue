@@ -25,7 +25,7 @@ const tableColumns: TableColumn[] = [
   //   ]
   // },
 
-  { title: '列 2', dataIndex: "age", },
+  { title: '列 2', dataIndex: "age", sorter: true },
   { title: '列 3', dataIndex: "sex", },
   { title: '列 4', dataIndex: "sex", width: 200 },
   { title: '列 5', dataIndex: "sex", width: 200 },
