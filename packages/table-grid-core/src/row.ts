@@ -1,7 +1,7 @@
 import type { GetRowKey, Option, Scroll, IViewport } from "./types";
 import type { TableState } from "./table";
 import { TableDataset } from "./dataset";
-import { isNotNil } from "es-toolkit";
+import { isNotNil, memoize, type MemoizeCache } from "es-toolkit";
 import { binaryFindIndexRange } from "./shared";
 
 /// 原始行数据
@@ -20,11 +20,6 @@ export type UpdateRowDataCallback = (
 // 创建 compare 函数，高度。
 const _create_compare = (target_y: number) => (y: number) => target_y - y;
 
-type RowHeights = {
-  row_key: RowKey,
-  height: number,
-}
-
 export interface RowMeta {
   key: RowKey;
 
@@ -38,6 +33,8 @@ export interface RowMeta {
 
   expand_by?: RowKey[];
 }
+
+type GetHeight = (row_key: RowKey) => number;
 
 //
 export class RowState {
@@ -55,7 +52,9 @@ export class RowState {
   get_row_key: GetRowKey;
 
   // 根据行的 row_key 获取对应的行高
-  get_row_height_by_row_key!: (row_key: RowKey) => number;
+  get_row_height_by_row_key!: GetHeight & {
+    cache: MemoizeCache<any, ReturnType<GetHeight>>;
+  };
 
   // 获取虚拟的数据集
   get_virtual_dataset!: (viewport: IViewport, scroll: Scroll) => RawData[];
@@ -108,11 +107,11 @@ export class RowState {
   // 初始化获取行高的函数
   protected init_get_row_height() {
     this.get_row_height_by_row_key = this.is_fixed_row_height
-      ? () => this.row_height
-      : (row_key: RowKey) => {
+      ? memoize(() => this.row_height)
+      : memoize((row_key: RowKey) => {
         const meta = this.get_meta_by_row_key(row_key);
         return meta?.height ?? this.row_height;
-      };
+      });
   }
 
   protected init_get_virtual_dataset() {
@@ -185,10 +184,11 @@ export class RowState {
   reset_display_dataset_y() {
     let y = 0;
     const list: number[] = [];
-    for (const raw_data of this.display_dataset) {
+
+    this.display_dataset.forEach(raw_data => {
       list.push(y);
       y = y + this.get_row_height_by_raw_data(raw_data);
-    }
+    });
 
     this.display_dataset_y = list;
   }
@@ -215,6 +215,7 @@ export class RowState {
 
   update_row_height_by_row_key(row_key: RowKey, height: number): boolean {
     const meta = this.get_meta_by_row_key(row_key);
+
     if (!meta) {
       console.error(`[Error] Table Row: Can't find meta by: ${row_key}`);
       return false;
@@ -223,7 +224,7 @@ export class RowState {
     if (this.get_row_height_by_row_key(row_key) === height) {
       return false;
     }
-
+    this.get_row_height_by_row_key.cache.delete(row_key);
     const is_change = meta.height !== height;
     meta.height = height;
     this.row_key_map_row_meta.set(row_key, meta);
