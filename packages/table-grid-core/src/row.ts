@@ -66,7 +66,7 @@ export class RowState {
 
   private row_key_map_raw_data: Map<RowKey, RawData> = new Map();
 
-  private table_state: TableState;
+  table_state: TableState;
 
   constructor(table_state: TableState) {
     this.table_state = table_state;

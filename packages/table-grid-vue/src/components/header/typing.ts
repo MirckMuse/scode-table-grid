@@ -1,4 +1,4 @@
-import type { ColKey } from "@scode/table-grid-core";
+import type { ColKey, SorterState } from "@scode/table-grid-core";
 import type { TableColumn, TableColumnEllipsisObject } from "../../typing";
 
 export interface TableHeaderProps {
@@ -27,4 +27,8 @@ export interface TableHeaderCellProps {
   width?: string | number;
 
   ellipsis?: TableColumnEllipsisObject;
+
+  sorterState?: SorterState;
+
+  processSorter: (colKey: ColKey) => void;
 }

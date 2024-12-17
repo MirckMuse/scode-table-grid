@@ -229,12 +229,6 @@ export class TableState {
     this.default_scroll_behavior();
   }
 
-  // 更新排序
-  update_sorter() {
-    console.log("update_sorter");
-    this.default_scroll_behavior();
-  }
-
   // 更新分页
   update_pagination(pagination: Partial<Pagination>) {
     console.log("update_pagination");
@@ -388,13 +382,22 @@ export class TableState {
   }
 
   // ================== Sorter State ==================
-  get_sorter_states(): Option<SorterState[]> {
-    // TODO:
-    return [];
+  // 更新排序
+  update_sorter_states(sorter_states: SorterState[]) {
+    this.row_state.dataset.update_sorter_states(sorter_states);
+
+    this.row_state.display_dataset = this.row_state.dataset.get_display_dataset();
+
+    this.row_state.reset_display_dataset_y();
+
+    this.default_scroll_behavior();
   }
 
   get_sorter_state(col_key: ColKey): Option<SorterState> {
-    // TODO:
-    return null;
+    return this.row_state.dataset.get_sorter_state(col_key);
+  }
+
+  get_sorter_states(): SorterState[] {
+    return this.row_state.dataset.get_sorter_states()
   }
 }

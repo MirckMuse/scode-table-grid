@@ -6,6 +6,8 @@ import { TableState, createLockedRequestAnimationFrame, uuid } from "@scode/tabl
 import { debounce, noop } from "es-toolkit";
 import { computed, inject, provide, reactive, ref, shallowRef } from "vue";
 import { DefaultLayoutGrid, useLayout, type LayoutGrid } from "./useLayout";
+import { useSorter } from "./useSorter";
+import { useEvent } from "./useEvent";
 
 const TableStateKey: InjectionKey<ITableContext> = Symbol("__table_state__");
 
@@ -49,6 +51,7 @@ export function useStateProvide(props: TableProps) {
 
   const tableState = _createTableState();
 
+  const { event } = useEvent();
 
   const _columnMap = new Map();
   function updateColumns(columns: TableColumn[]) {
@@ -61,6 +64,7 @@ export function useStateProvide(props: TableProps) {
         _columnMap.set(colKey, column);
         const _column: CoreTableColumn = {
           key: colKey,
+          dataIndex: column.dataIndex,
           width: column.width,
           col_span: column.colSpan,
           fixed: column.fixed,
@@ -99,6 +103,11 @@ export function useStateProvide(props: TableProps) {
   }, 60);
 
   const { layoutGrid, updateLayoutGrid, updateColLayoutGrid } = useLayout(tableState);
+
+  useSorter(tableState, {
+    resetScroll,
+    resetDataSource: () => event.resetDatasource?.()
+  });
 
   const animationUpdate = createLockedRequestAnimationFrame(() => {
     tableState.reset_content_box_width();
@@ -151,7 +160,12 @@ export function useStateProvide(props: TableProps) {
   const updateScroll = (new_scroll: Partial<Scroll>) => {
     animationUpdateScroll(Object.assign(scroll.value, new_scroll));
   };
-  
+
+  function resetScroll() {
+    const { top, left } = tableState.scroll;
+    scroll.value = { top, left }
+  }
+
   provide(TableStateKey, {
     tableState: tableState,
     tableProps: props,

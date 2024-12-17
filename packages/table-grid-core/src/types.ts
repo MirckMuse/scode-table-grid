@@ -55,6 +55,8 @@ export interface TableColumnFilter {
 export interface TableColumn {
   key: ColKey;
 
+  dataIndex?: string;
+
   width?: number;
 
   // 合并单元格
@@ -67,7 +69,6 @@ export interface TableColumn {
   // 排序相关, TODO: 要不要整合在一块呢？？
   sorter?: TableColumnSorter;
   sortOrder?: string | null;
-  sortDirections?: [string, string];
 
   filter?: TableColumnFilter;
 }
@@ -78,7 +79,7 @@ export enum SorterDirection {
 }
 
 export interface SorterState {
-  colKey: ColKey;
+  col_key: ColKey;
 
   direction?: SorterDirection;
 }
@@ -86,11 +87,11 @@ export interface SorterState {
 // 筛选状态
 export interface FilterState {
   // 列的 key
-  colKey: ColKey;
+  col_key: ColKey;
 
   // 筛选值
-  filterKeys?: TableColumnFilterValue[];
+  filter_keys?: TableColumnFilterValue[];
 
   // TODO: 待确认
-  forceFilter?: boolean;
+  force_filter?: boolean;
 }

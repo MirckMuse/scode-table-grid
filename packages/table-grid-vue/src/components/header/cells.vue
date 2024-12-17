@@ -1,11 +1,11 @@
 <template>
-  <HeaderCell v-for="bind in columnBinds" v-bind="bind" :key="bind.colKey"></HeaderCell>
+  <HeaderCell v-for="bind in columnBinds" v-bind="bind" :key="bind.colKey" :processSorter="processSorter"></HeaderCell>
 </template>
 
 <script lang="ts" setup>
 import type { StyleValue } from "vue";
 import { computed } from "vue";
-import { useStateInject } from "../../hooks";
+import { useStateInject, useSorterInject } from "../../hooks";
 import type { TableColumnEllipsisObject } from "../../typing";
 import HeaderCell from "./cell.vue";
 import type { TableHeaderCellsProps } from "./typing";
@@ -17,6 +17,8 @@ defineOptions({
 const props = defineProps<TableHeaderCellsProps>();
 
 const { tableState } = useStateInject();
+
+const { sorterStates, processSorter } = useSorterInject();
 
 const col_state = tableState.get_col_state();
 
@@ -50,12 +52,15 @@ const columnBinds = computed(() => {
       }
     }
 
+    const sorterState = sorterStates.value.find(state => state.col_key === colKey);
+
     binds.push({
       column,
       style,
       colKey,
       ellipsis: column.ellipsis as TableColumnEllipsisObject | undefined,
       prefixCls: prefixCls,
+      sorterState,
       ...dataset
     });
     return binds;

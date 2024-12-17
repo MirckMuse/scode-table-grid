@@ -1,8 +1,29 @@
+import { isNil, memoize } from "es-toolkit";
+import type { ColKey } from "../col";
 import type { RawData, RowKey, RowState } from "../row";
-import type { Option, Pagination } from "../types";
+import type { Option, Pagination, SorterState } from "../types";
+import { SorterDirection } from "../types";
+import { get } from "es-toolkit/compat";
+
+enum CompareResult {
+  Less = -1,
+  Equal = 0,
+  Greater = 1,
+}
 
 // 目标是完成数据的筛选、排序、分页、展开的数据完成
 // 展开数据比较麻烦，需要区分树形结构和展开行两种情况。
+
+function get_sorter_rate(direction?: SorterDirection) {
+  if (direction === SorterDirection.Ascend) {
+    return 1;
+  }
+  if (direction === SorterDirection.Descend) {
+    return -1;
+  }
+
+  return 0;
+}
 
 export class TableDataset {
   protected pagination: false | Pagination;
@@ -18,6 +39,10 @@ export class TableDataset {
 
   protected row_state: RowState;
 
+  protected sorter_states: SorterState[] = [];
+
+  protected server = false;
+
   update_pagination(pagination: Partial<Pagination>) {
     this.pagination = Object.assign({}, this.pagination, pagination);
   }
@@ -28,6 +53,21 @@ export class TableDataset {
 
   init() {
     // TODO:
+  }
+
+  // ================== Sorter State ==================
+  update_sorter_states(sorter_states: SorterState[]) {
+    this.sorter_states = sorter_states;
+
+    this.process_display_dataset();
+  }
+
+  get_sorter_states(): SorterState[] {
+    return this.sorter_states;
+  }
+
+  get_sorter_state(col_key: ColKey): Option<SorterState> {
+    return this.sorter_states.find(state => state.col_key === col_key) ?? null;
   }
 
   get_display_dataset(): RawData[] {
@@ -56,9 +96,53 @@ export class TableDataset {
 
   // 处理可见的数据集合【筛选、排序、展开、分页】
   process_display_dataset() {
-    // TODO:
-    // diff 对比筛选、排序、展开、分页、好减少数据处理过程
-    this.display_data = this.raw_dataset;
+    this.display_data = ([] as RawData[]).concat(this.raw_dataset);
+
+    if (this.server) {
+      // 如果是服务端的来源数据，则无需后续逻辑
+      return;
+    }
+    // TODO: diff 对比筛选、排序、展开、分页、好减少数据处理过程
+
+    if (this.sorter_states.length) {
+      const col_state = this.row_state.table_state.get_col_state();
+      // TODO: 需要验证
+      const _compare = memoize(({ prev, next }) => {
+        if (!isNil(prev) && !isNil(next)) {
+          if (typeof prev === "number" && typeof next === "number") {
+            return prev - next;
+          }
+
+          if (typeof prev === "number" && typeof next === "string") {
+            return CompareResult.Less;
+          }
+
+          // TODO: 字符串
+        }
+        if (isNil(prev) && isNil(next)) {
+          return CompareResult.Equal;
+        }
+        if (isNil(prev)) {
+          return CompareResult.Less;
+        }
+        return CompareResult.Greater;
+      });
+      const new_sorter_states = this.sorter_states.map(state => Object.assign({}, state, { column: col_state.get_column(state.col_key), rate: get_sorter_rate(state.direction) }));
+
+      this.display_data = this.display_data.sort((prev, next) => {
+        for (const state of new_sorter_states) {
+          const dataIndex = state.column?.dataIndex;
+
+          if (!isNil(dataIndex)) {
+            const compare_result = _compare({ prev: get(prev, dataIndex), next: get(next, dataIndex) })
+            if (compare_result !== CompareResult.Equal) {
+              return compare_result * state.rate;
+            }
+          }
+        }
+        return CompareResult.Equal;
+      });
+    }
   }
 
   protected flatten(

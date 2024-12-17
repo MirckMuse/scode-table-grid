@@ -28,11 +28,13 @@ watch(() => props.columns, () => {
   updateColumns(props.columns ?? []);
 }, { immediate: true });
 
-watchEffect(() => {
-  tableState.update_dataset(props.dataSource ?? []);
-  // TODO: 重置完后，需要通知子组件。
-});
-
+watch(
+  () => props.dataSource,
+  () => {
+    tableState.update_dataset(props.dataSource ?? []);
+  },
+  { immediate: true }
+);
 const internalTable = shallowRef<InternalTableRef>();
 
 const tableClass = computed(() => [props.prefixCls]);

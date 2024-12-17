@@ -39,7 +39,7 @@ import { type RawData } from '@scode/table-grid-core';
 import type { StyleValue } from 'vue';
 
 import { computed, onMounted, onUnmounted, reactive, shallowRef, triggerRef } from 'vue';
-import { useStateInject, useBodyScroll } from '../../hooks';
+import { useStateInject, useBodyScroll, useEventInject } from '../../hooks';
 import { useOverrideInject } from '../context/OverrideContext';
 import Scrollbar from "../scrollbar/index.vue";
 import BodyRows from "./rows.vue";
@@ -53,6 +53,8 @@ defineProps<TableBodyProps>()
 
 // 能在这一层收集的信息，就全部放在这里
 const { Empty } = useOverrideInject();
+
+const { event } = useEventInject();
 
 const {
   tableProps, tableState, isNestDataSource,
@@ -206,6 +208,13 @@ const updateCellSizes = (mutationsList: MutationRecord[]) => {
 
   resetGridTemplateRows();
 }
+
+event.resetDatasource = () => {
+  dataSource.value = tableState.get_viewport_dataset();
+}
+onUnmounted(() => {
+  event.resetDatasource = undefined;
+})
 
 const $cellResize = new MutationObserver(updateCellSizes)
 dataSource.value = tableState.get_viewport_dataset();

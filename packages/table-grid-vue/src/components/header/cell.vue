@@ -2,9 +2,9 @@
   <div :class="cellClass" :title="title">
     <div :class="cellInnerClass" :style="cellInnerStyle">
       <CellInner :col-key="colKey" :column="column" :ellipsis="ellipsis"></CellInner>
-
-      <div v-if="column.sorter" :class="cellPrefixClass + '__append'">
-        <Sorter v-if="column.sorter" :prefix-cls="cellPrefixClass"></Sorter>
+      <div v-if="column.sorter || column.filter" :class="cellPrefixClass + '__append'">
+        <Sorter v-if="column.sorter" :prefix-cls="cellPrefixClass" :process-sorter="_processSorter"
+          :sorter-state="sorterState"></Sorter>
       </div>
     </div>
     <ResizeHolder v-if="column.resizable" :col-key="colKey" :prefix-cls="cellPrefixClass"></ResizeHolder>
@@ -43,4 +43,10 @@ const title = computed(() => {
   const { column, ellipsis } = props;
   return ellipsis?.showTitle ? renderColumnTitle(column) as string : undefined;
 });
+
+function _processSorter() {
+  const { processSorter, colKey } = props;
+
+  processSorter(colKey)
+}
 </script>
