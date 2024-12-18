@@ -5,10 +5,10 @@
 </template>
 
 <script lang="ts" setup>
-import type { TableProps, InternalTableRef, TableEmit } from "./typing";
+import type { TableProps, TableSlots, InternalTableRef, TableEmit } from "./typing";
 import { useStateProvide } from "./hooks";
 import InternalTable from "./components/InternalTable.vue";
-import { shallowRef, computed, watch, watchEffect } from "vue";
+import { shallowRef, computed, watchEffect } from "vue";
 
 defineOptions({
   name: "STable",
@@ -20,21 +20,20 @@ const props = withDefaults(defineProps<TableProps>(), {
   rowChildrenName: "children",
 });
 
+const slot = defineSlots<TableSlots>();
+
 const emit = defineEmits<TableEmit>()
 
-const { tableRef, tableState, updateColumns } = useStateProvide(props);
+const { tableRef, tableState, updateColumns } = useStateProvide({ props, slot });
 
-watch(() => props.columns, () => {
+watchEffect(() => {
   updateColumns(props.columns ?? []);
-}, { immediate: true });
+});
 
-watch(
-  () => props.dataSource,
-  () => {
-    tableState.update_dataset(props.dataSource ?? []);
-  },
-  { immediate: true }
-);
+watchEffect(() => {
+  tableState.update_dataset(props.dataSource ?? []);
+})
+
 const internalTable = shallowRef<InternalTableRef>();
 
 const tableClass = computed(() => [props.prefixCls]);

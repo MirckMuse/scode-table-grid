@@ -116,7 +116,9 @@ export class TableDataset {
       }
       return CompareResult.Greater;
     });
+
     const new_sorter_states = this.sorter_states.map(state => Object.assign({}, state, { column: col_state.get_column(state.col_key), rate: get_sorter_rate(state.direction) }));
+
     return display_data.sort((prev, next) => {
       for (const state of new_sorter_states) {
         const dataIndex = state.column?.dataIndex;

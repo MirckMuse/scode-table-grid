@@ -1,6 +1,6 @@
 import type { Box, ColKey, TableColumn as CoreTableColumn, IViewport, Scroll } from "@scode/table-grid-core";
 import type { ComputedRef, InjectionKey, Ref } from "vue";
-import type { TableColumn, TableProps } from "../typing";
+import type { TableColumn, TableProps, TableSlots } from "../typing";
 
 import { TableState, createLockedRequestAnimationFrame, uuid } from "@scode/table-grid-core";
 import { debounce, noop } from "es-toolkit";
@@ -8,6 +8,7 @@ import { computed, inject, provide, reactive, ref, shallowRef } from "vue";
 import { DefaultLayoutGrid, useLayout, type LayoutGrid } from "./useLayout";
 import { useSorter } from "./useSorter";
 import { useEvent } from "./useEvent";
+import { useRender } from "./useRender";
 
 const TableStateKey: InjectionKey<ITableContext> = Symbol("__table_state__");
 
@@ -46,7 +47,16 @@ const _createTableState = (): TableState => {
   });
 };
 
-export function useStateProvide(props: TableProps) {
+export interface IStateOption {
+  props: TableProps;
+
+  slot: TableSlots;
+}
+
+export function useStateProvide({ props, slot }: IStateOption) {
+  // 收集渲染函数
+  useRender(props, slot);
+
   const tableRef = shallowRef<HTMLElement>();
 
   const tableState = _createTableState();
@@ -154,11 +164,13 @@ export function useStateProvide(props: TableProps) {
   const hScrollbarVisible = computed(() => contentBox.value.width > viewport.value.width);
   const vScrollbarVisible = computed(() => contentBox.value.height > viewport.value.height);
   const animationUpdateScroll = createLockedRequestAnimationFrame((new_scroll: Scroll) => {
-    tableState.update_scroll(new_scroll);
-    tableState.adjust_scroll();
+    Object.assign(scroll.value, new_scroll)
   });
   const updateScroll = (new_scroll: Partial<Scroll>) => {
-    animationUpdateScroll(Object.assign(scroll.value, new_scroll));
+    tableState.update_scroll(Object.assign({}, scroll.value, new_scroll));
+    tableState.adjust_scroll();
+
+    animationUpdateScroll(tableState.scroll);
   };
 
   function resetScroll() {

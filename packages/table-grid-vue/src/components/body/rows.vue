@@ -1,16 +1,18 @@
 <template>
   <BodyRow v-for="rowData in rowDataSource" :key="rowData.rowKey" :row-key="rowData.rowKey" :meta="rowData.meta"
-    :index="rowData.meta?.index ?? -1" :record="rowData.record" :columns="computedColumns" :grid="grid"
-    :prefix-cls="prefixCls" />
+    :index="rowData.index" :record="rowData.record" :columns="computedColumns" :grid="grid" :prefix-cls="prefixCls"
+    :renderBodyCell="renderBodyCell" v-bind="genBind(rowData.record, rowData.index)" />
 </template>
 
 <script lang="ts" setup>
 import type { ColKey, RawData } from "@scode/table-grid-core";
+import type { CustomRow, RowClassName } from "../../typing";
 import BodyRow from "./row.vue";
-import { useStateInject } from "../../hooks";
+import { useStateInject, type ITableRender } from "../../hooks";
 import { computed } from "vue";
+import classNames from "classnames";
 
-interface BodyRowsProps {
+interface BodyRowsProps extends ITableRender {
   prefixCls: string;
 
   dataSource: RawData[];
@@ -20,9 +22,23 @@ interface BodyRowsProps {
   grid: number[];
 
   isNestDataSource: boolean;
+
+  customRow?: CustomRow;
+
+  rowClassName?: RowClassName;
 }
 
 const props = defineProps<BodyRowsProps>();
+
+const { customRow, rowClassName } = props;
+
+function genBind(record: RawData, index: number) {
+  const bind = customRow?.(record, index) || {};
+  const classname = rowClassName?.(record, index) ?? "";
+  bind.class = classNames(bind.class, classname);
+
+  return bind;
+}
 
 const { tableState, mapToColumn } = useStateInject();
 
@@ -36,7 +52,7 @@ const computedColumns = computed(() => {
       column: mapToColumn(colKey)
     }
   })
-})
+});
 
 
 const rowDataSource = computed(() => {
@@ -47,7 +63,8 @@ const rowDataSource = computed(() => {
     return {
       rowKey,
       meta: rowMeta,
-      record: rawData
+      record: rawData,
+      index: rowMeta?.index ?? -1
     }
   });
 });

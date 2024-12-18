@@ -54,9 +54,6 @@ importers:
       less:
         specifier: ^4.2.0
         version: 4.2.0
-      remixicon:
-        specifier: ^4.5.0
-        version: 4.5.0
       rimraf:
         specifier: ^6.0.1
         version: 6.0.1
@@ -97,9 +94,9 @@ importers:
       '@scode/table-grid-core':
         specifier: workspace:*
         version: link:../table-grid-core
-      remixicon:
-        specifier: ^4.5.0
-        version: 4.5.0
+      classnames:
+        specifier: ^2.5.1
+        version: 2.5.1
       vue:
         specifier: '>= 3'
         version: 3.5.12(typescript@5.6.3)
@@ -879,9 +876,6 @@ packages:
   react@18.3.1:
     resolution: {integrity: sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==, tarball: https://registry.npmmirror.com/react/-/react-18.3.1.tgz}
     engines: {node: '>=0.10.0'}
-
-  remixicon@4.5.0:
-    resolution: {integrity: sha512-IP/wNQGG3JCigaeFF3DERSTqMIZBlNu1yu8clNGB7wFe7ZN/ueKMplFHL5uEbnGpCzqfY6MlxIYn2vRzub+5cQ==, tarball: https://registry.npmmirror.com/remixicon/-/remixicon-4.5.0.tgz}
 
   rimraf@6.0.1:
     resolution: {integrity: sha512-9dkvaxAsk/xNXSJzMgFqqMCuFgt2+KsOFek3TMLfo8NCPfWpBmqwyNn5Y+NX56QUYfCtsyhF3ayiboEoUmJk/A==, tarball: https://registry.npmmirror.com/rimraf/-/rimraf-6.0.1.tgz}
@@ -1737,8 +1731,6 @@ snapshots:
   react@18.3.1:
     dependencies:
       loose-envify: 1.4.0
-
-  remixicon@4.5.0: {}
 
   rimraf@6.0.1:
     dependencies:

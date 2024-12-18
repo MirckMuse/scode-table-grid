@@ -33,37 +33,12 @@ function isValidVNode(target: unknown): boolean {
   return target.type !== Comment;
 }
 
-// TODO 渲染表格内容
-function renderCustomCell(props: TableBodyCellProps, text: unknown, title: unknown): Option<any[]> {
-  const { column, rowIndex, record } = props;
-
-  const params = {
-    text,
-    record,
-    column,
-    index: rowIndex,
-    title,
-  };
-
-  if (column.customRender) {
-    return toArray(column.customRender(params));
-  }
-
-  const bodyCellVNodes = props.bodyCell?.(params);
-
-  if (isNil(bodyCellVNodes)) return null;
-
-  const validVNodes = toArray(bodyCellVNodes).filter(isValidVNode);
-
-  return validVNodes.length ? validVNodes : null;
-}
-
 
 export default defineComponent<TableBodyCellProps>({
   name: "STableBodyCell",
 
   // FIXME: PROPS 定义的方式有点问题，需要减少人工配置成本
-  props: ["prefixCls", "column", "record", "rowIndex", "rowKey", "colKey", "deep", "indentSize", "isMergedCell", "transformCellText", "bodyCell"],
+  props: ["prefixCls", "column", "record", "rowIndex", "rowKey", "colKey", "deep", "indentSize", "isMergedCell", "transformCellText", "renderBodyCell"],
 
   setup(props, { slots }) {
     const cellRef = shallowRef<HTMLElement>();
@@ -72,6 +47,31 @@ export default defineComponent<TableBodyCellProps>({
     const { tableState } = useStateInject();
 
     return () => {
+      // TODO 渲染表格内容
+      function renderCustomCell(props: TableBodyCellProps, text: unknown, title: unknown): Option<any[]> {
+        const { column, rowIndex, record } = props;
+
+        const params = {
+          text,
+          record,
+          column,
+          index: rowIndex,
+          title,
+        };
+
+        if (column.customRender) {
+          return toArray(column.customRender(params));
+        }
+
+        const bodyCellVNodes = props.renderBodyCell?.(params);
+
+        if (isNil(bodyCellVNodes)) return null;
+
+        const validVNodes = toArray(bodyCellVNodes).filter(isValidVNode);
+
+        return validVNodes.length ? validVNodes : null;
+      }
+
       const { transformCellText, column, record, rowIndex, rowKey, colKey, prefixCls, isMergedCell } = props;
 
       const cellPrefixCls = prefixCls + "-cell";

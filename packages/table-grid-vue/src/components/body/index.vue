@@ -38,8 +38,8 @@
 import { type RawData } from '@scode/table-grid-core';
 import type { StyleValue } from 'vue';
 
-import { computed, onMounted, onUnmounted, reactive, shallowRef, triggerRef } from 'vue';
-import { useStateInject, useBodyScroll, useEventInject } from '../../hooks';
+import { computed, onBeforeMount, onMounted, onUnmounted, reactive, shallowRef, triggerRef } from 'vue';
+import { useStateInject, useBodyScroll, useEventInject, useRenderInject } from '../../hooks';
 import { useOverrideInject } from '../context/OverrideContext';
 import Scrollbar from "../scrollbar/index.vue";
 import BodyRows from "./rows.vue";
@@ -56,6 +56,8 @@ const { Empty } = useOverrideInject();
 
 const { event } = useEventInject();
 
+const { renderBodyCell, renderExpandedRow } = useRenderInject();
+
 const {
   tableProps, tableState, isNestDataSource,
   scroll, updateScroll: _updateScroll,
@@ -64,7 +66,7 @@ const {
   viewport, updateViewport,
 
   contentBox,
-  layoutGrid
+  layoutGrid,
 } = useStateInject();
 
 const updateScroll = () => _updateScroll(scroll.value);
@@ -96,7 +98,6 @@ const tableBodyInnerStyle = computed(() => {
   return {}
 });
 
-
 const offsetTop = computed(() => {
   const first_raw_data = dataSource.value[0];
 
@@ -106,13 +107,12 @@ const offsetTop = computed(() => {
 const gridTemplateRows = shallowRef<number[]>([]);
 
 function resetGridTemplateRows() {
-  gridTemplateRows.value = tableState.get_row_heights(dataSource.value);
+  gridTemplateRows.value = Array.from(tableState.get_row_heights(dataSource.value));
 
   if (tableState.content_box.height !== contentBox.value.height) {
     triggerRef(contentBox)
   }
 }
-resetGridTemplateRows();
 
 // 左侧固定列
 const tableBodyLeftRef = shallowRef<HTMLElement>();
@@ -191,6 +191,10 @@ const commonRowProps = reactive({
   dataSource: dataSource,
   isNestDataSource: isNestDataSource,
   prefixCls: tableBodyPrefixCls,
+  renderBodyCell,
+  renderExpandedRow,
+  customRow: tableProps.customRow,
+  rowClassName: tableProps.rowClassName,
 });
 
 // 元素转meta
@@ -226,6 +230,10 @@ const $resize = new ResizeObserver((entry) => {
   const el = entry[0];
   const { width, height } = el.contentRect;
   updateViewport({ width, height });
+});
+
+onBeforeMount(() => {
+  resetGridTemplateRows();
 });
 
 onMounted(() => {

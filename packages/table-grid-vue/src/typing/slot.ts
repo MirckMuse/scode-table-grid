@@ -1,10 +1,23 @@
 import type { RawData } from "@scode/table-grid-core";
 import type { TableColumn } from ".";
 
-// 表体单元格插槽
-export type BodyCellSlot = (option: { title: any; column: TableColumn; text: unknown; record: RawData; index: number }) => unknown;
+export interface BodyCellRenderOption {
+  title: any;
+  column: TableColumn;
+  text: unknown;
+  record: RawData;
+  index: number
+}
 
-export interface TableSlot {
+// 表体单元格插槽
+export type BodyCellRender = (option: BodyCellRenderOption) => unknown;
+
+// 展开行的插槽
+export type ExpandedRowRender = (record: RawData, index: number, indent: number, expanded: boolean) => unknown;
+
+export interface TableSlots {
   // 格式化单元格
-  bodyCell?: BodyCellSlot;
+  bodyCell?: BodyCellRender;
+
+  expandedRow?: ExpandedRowRender;
 }

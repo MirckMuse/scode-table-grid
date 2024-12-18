@@ -22,7 +22,8 @@
   },
   "dependencies": {
     "@remixicon/vue": "^4.5.0",
-    "@scode/table-grid-core": "workspace:*"
+    "@scode/table-grid-core": "workspace:*",
+    "classnames": "^2.5.1"
   },
   "keywords": [
     "vue3",

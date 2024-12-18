@@ -1,9 +1,12 @@
 import type { ColKey, RawData } from "@scode/table-grid-core";
 import type { VNode } from "vue";
+import type { TableSlots } from "./slot";
 
 export * from "./emit";
 
 export * from "./inherit";
+
+export * from "./slot";
 
 export type TablePaginationProps = {
   vertical?: "top" | "bottom";
@@ -35,7 +38,7 @@ export interface TableScroll {
   size: number;
 }
 
-export interface TableProps {
+export interface TableProps extends TableSlots {
   prefixCls?: string;
 
   pagination?: Partial<TablePaginationProps> | boolean;
@@ -51,7 +54,15 @@ export interface TableProps {
   columns?: TableColumn[];
 
   scroll?: Partial<TableScroll>;
+
+  customRow?: CustomRow;
+
+  rowClassName?: RowClassName;
 }
+
+export type CustomRow = (record: RawData, index: number) => any;
+
+export type RowClassName = (record: RawData, index: number) => string | undefined;
 
 export type TableColumnAlign = "left" | "right" | "center";
 
