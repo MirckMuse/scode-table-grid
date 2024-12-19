@@ -281,8 +281,8 @@ onUnmounted(() => {
 const mergedCellMeta = shallowRef<MergedCellMeta[]>([]);
 
 function refresh() {
+  mergedCellMeta.value = Array.from(tableState.get_viewport_merged_cell());
 	dataSource.value = tableState.get_viewport_dataset();
-	mergedCellMeta.value = Array.from(tableState.get_viewport_merged_cell());
 }
 
 const $cellResize = new MutationObserver(updateCellSizes);

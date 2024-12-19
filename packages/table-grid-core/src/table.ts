@@ -180,10 +180,15 @@ export class TableState {
 
 		const meta_list = this.cell_state.values();
 
+		const buffer = this.viewport.height / 2;
+
+		const min = Math.max(scroll.top - buffer, 0);
+		const max = Math.min(scroll.top + buffer, this.content_box.height);
+
 		return meta_list.filter((meta) => {
 			const { y, height } = meta;
 
-			return y <= scroll.top && y + height >= scroll.top;
+			return y >= min && y + height <= max;
 		});
 	}
 
