@@ -1,11 +1,11 @@
 <template>
   <BodyRow v-for="rowData in rowDataSource" :key="rowData.rowKey" :row-key="rowData.rowKey" :meta="rowData.meta"
     :index="rowData.index" :record="rowData.record" :columns="computedColumns" :grid="grid" :prefix-cls="prefixCls"
-    :renderBodyCell="renderBodyCell" v-bind="genBind(rowData.record, rowData.index)" />
+    :renderBodyCell="renderBodyCell" v-bind="genBind(rowData.record, rowData.index)" :is-merged-cell="isMergedCell" />
 </template>
 
 <script lang="ts" setup>
-import type { ColKey, RawData } from "@scode/table-grid-core";
+import type { ColKey, RawData, RowKey } from '@scode/table-grid-core'
 import type { CustomRow, RowClassName } from "../../typing";
 import BodyRow from "./row.vue";
 import { useStateInject, type ITableRender } from "../../hooks";
@@ -26,6 +26,8 @@ interface BodyRowsProps extends ITableRender {
   customRow?: CustomRow;
 
   rowClassName?: RowClassName;
+
+  isMergedCell: (colKey: ColKey, rowKey: RowKey) => boolean;
 }
 
 const props = defineProps<BodyRowsProps>();

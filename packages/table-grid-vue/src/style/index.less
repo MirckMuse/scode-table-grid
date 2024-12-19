@@ -173,7 +173,7 @@
       height: 8px;
       background: var(--antd-arrow-background-color);
       clip-path: polygon(1.6568542494923806px 100%, 50% 1.6568542494923806px, 14.34314575050762px 100%, 1.6568542494923806px 100%);
-      clip-path: path('M 0 8 A 4 4 0 0 0 2.82842712474619 6.82842712474619 L 6.585786437626905 3.0710678118654755 A 2 2 0 0 1 9.414213562373096 3.0710678118654755 L 13.17157287525381 6.82842712474619 A 4 4 0 0 0 16 8 Z');
+      //clip-path: path('M 0 8 A 4 4 0 0 0 2.82842712474619 6.82842712474619 L 6.585786437626905 3.0710678118654755 A 2 2 0 0 1 9.414213562373096 3.0710678118654755 L 13.17157287525381 6.82842712474619 A 4 4 0 0 0 16 8 Z');
       content: "";
     }
   }
@@ -216,6 +216,7 @@
 // s-table-body-cell
 
 .s-table-body-cell {
+  box-sizing: border-box;
   border: 1px solid transparent;
   border-bottom-color: var(--table-border-color);
   font-style: normal;
@@ -226,7 +227,7 @@
   line-height: 1.642857;
   overflow-wrap: break-word;
   transition: background-color .2s ease-in-out;
-  background-color: initial;
+  background-color: inherit;
   min-height: 0;
   display: flex;
   min-width: 0;
@@ -276,7 +277,7 @@
   min-width: var(--table-body-expand-icon-size);
   height: var(--table-body-expand-icon-size);
 
-  >svg {
+  > svg {
     width: 100%;
     height: 100%;
   }
@@ -312,14 +313,14 @@
   }
 
   &__trigger,
-  &__trigger>svg {
+  &__trigger > svg {
     width: var(--table-header-cell-filter-size);
     height: var(--table-header-cell-filter-size);
   }
 
   &__dropdown,
   &__dropdown-submenu {
-    .ant-checkbox-wrapper+span {
+    .ant-checkbox-wrapper + span {
       padding-left: 8px;
     }
   }
@@ -337,7 +338,7 @@
     border-radius: 6px;
     box-shadow: var(--table-popover-box-shadow);
 
-    >.ant-dropdown-menu {
+    > .ant-dropdown-menu {
       border: none;
       box-shadow: none;
     }
@@ -354,8 +355,8 @@
 }
 
 // 分页组件和内容的距离
-.s-pagination+.s-table-internal,
-.s-table-internal+.s-pagination {
+.s-pagination + .s-table-internal,
+.s-table-internal + .s-pagination {
   margin-top: 24px;
 }
 
@@ -375,6 +376,7 @@
   flex: 1;
   min-height: 0;
   color: var(--table-body-cell-text-color);
+  background: var(--table-body-cell-bg);
 
   &__scrollbar-vertical {
     position: fixed;
@@ -387,11 +389,18 @@
   }
 }
 
+.s-table-body__inner-fixedLeft,
+.s-table-body__inner-fixedRight,
+.s-table-body__inner-center {
+  background: inherit;
+}
+
 .s-table-body__inner {
   width: 100%;
   height: 100%;
   overflow: hidden;
   position: relative;
+  background: inherit;
 
   &::-webkit-scrollbar {
     display: none;
@@ -414,11 +423,11 @@
   }
 
   &__scrollbar-hover {
-    &:hover>.s-table-scroll__track {
+    &:hover > .s-table-scroll__track {
       opacity: 1;
     }
 
-    >.s-table-scroll__track {
+    > .s-table-scroll__track {
       opacity: 0;
       transition: opacity 0.16s cubic-bezier(0, 0.5, 1, 0.5);
     }
@@ -440,7 +449,7 @@
   height: 100%;
   max-height: 100%;
   overflow: hidden;
-  background-color: var(--table-body-cell-bg);
+  background: inherit;
 
   &__hover {
     background-color: var(--table-body-cell-bg-hover);
@@ -448,11 +457,11 @@
 }
 
 .s-table-body-cell {
-  &__merged {
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
+  background: inherit;
+}
+
+.s-table-header {
+  z-index: 2;
 }
 
 .s-table-header__inner {
@@ -532,6 +541,25 @@
 .beforeHandler {
   width: 100%;
   height: 0;
+}
+
+.s-table-body-cell__merged {
+  z-index: 1;
+  position: absolute;
+  background: var(--table-body-cell-bg);
+  pointer-events: auto;
+}
+
+.s-table-body__merged {
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+
+  &-inner {
+    position: relative;
+  }
 }
 
 @import "./scroll.less";

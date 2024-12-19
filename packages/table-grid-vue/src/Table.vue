@@ -22,7 +22,8 @@ const props = withDefaults(defineProps<TableProps>(), {
 
 const slot = defineSlots<TableSlots>();
 
-const emit = defineEmits<TableEmit>()
+// TODO: 需要知道怎么做类型定义
+const emit = defineEmits<TableEmit>();
 
 const { tableRef, tableState, updateColumns } = useStateProvide({ props, slot });
 

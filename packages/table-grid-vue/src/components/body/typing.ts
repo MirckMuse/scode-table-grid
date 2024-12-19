@@ -1,5 +1,5 @@
 import type { ColKey, RawData, RowKey } from "@scode/table-grid-core";
-import type { BodyCellInheritProps, TableColumn } from "../../typing";
+import type { BodyCellInheritProps, CustomCell, TableColumn } from "../../typing";
 
 export interface TableBodyCellProps extends BodyCellInheritProps {
   prefixCls: string;
@@ -19,4 +19,6 @@ export interface TableBodyCellProps extends BodyCellInheritProps {
   indentSize?: string | number;
 
   isMergedCell?: boolean;
+
+  customCell?: CustomCell;
 }

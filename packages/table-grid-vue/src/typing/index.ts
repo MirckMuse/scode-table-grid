@@ -90,7 +90,7 @@ interface CustomOption {
 
 export interface CustomCellOption extends CustomOption { }
 
-export type CustomCell = (option: CustomCellOption) => Record<string, any>;
+export type CustomCell = (option: CustomCellOption) => Record<string, any> & { colSpan?: number; rowSpan?: number };
 
 export type BaseValue = string | number | boolean | undefined | null;
 

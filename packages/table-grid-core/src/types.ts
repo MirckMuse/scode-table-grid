@@ -2,11 +2,10 @@ import type { RawData, RowKey } from "./row";
 import type { ColKey } from "./col";
 
 export interface Box {
-  width: number;
+	width: number;
 
-  height: number;
+	height: number;
 }
-
 
 // 获取行数据的 key
 export type GetRowKey = (raw_data: RawData) => RowKey;
@@ -17,22 +16,21 @@ export type Option<T> = T | null | undefined;
 export type Noop = () => void;
 
 // 窗口可视区域
-export interface IViewport extends Box {
-}
+export interface IViewport extends Box {}
 
 // 滚动距离
 export interface Scroll {
-  top: number;
+	top: number;
 
-  left: number;
+	left: number;
 }
 
 export interface Pagination {
-  page: number;
+	page: number;
 
-  size: number;
+	size: number;
 
-  total: number;
+	total: number;
 }
 
 // ================ 列配置 ================
@@ -44,54 +42,64 @@ export type TableColumnFilterValue = string | number;
 
 // 表头筛选项的配置
 export interface TableColumnFilter {
-  value?: string[];
+	value?: string[];
 
-  onFilter?: (search: string[], row: RawData) => boolean;
+	onFilter?: (search: string[], row: RawData) => boolean;
+}
+
+interface CustomOption {
+	record: RawData;
+
+	index: number;
+
+	column: Readonly<TableColumn>;
 }
 
 /**
  * 表格列配置，key 和dataIndex 至少有一个必填
  */
 export interface TableColumn {
-  key: ColKey;
+	key: ColKey;
 
-  dataIndex?: string;
+	dataIndex?: string;
 
-  width?: number;
+	customCell?: (option: CustomOption) => { colSpan?: number; rowSpan?: number };
 
-  // 合并单元格
-  col_span?: Option<number>;
+	width?: number;
 
-  fixed?: boolean | Fixed;
+	// 合并单元格
+	col_span?: Option<number>;
 
-  children?: TableColumn[];
+	fixed?: boolean | Fixed;
 
-  // 排序相关, TODO: 要不要整合在一块呢？？
-  sorter?: TableColumnSorter;
-  sortOrder?: string | null;
+	children?: TableColumn[];
 
-  filter?: TableColumnFilter;
+	// 排序相关, TODO: 要不要整合在一块呢？？
+	sorter?: TableColumnSorter;
+	sortOrder?: string | null;
+
+	filter?: TableColumnFilter;
 }
 
 export enum SorterDirection {
-  Ascend = 'ascend',
-  Descend = 'descend',
+	Ascend = "ascend",
+	Descend = "descend",
 }
 
 export interface SorterState {
-  col_key: ColKey;
+	col_key: ColKey;
 
-  direction?: SorterDirection;
+	direction?: SorterDirection;
 }
 
 // 筛选状态
 export interface FilterState {
-  // 列的 key
-  col_key: ColKey;
+	// 列的 key
+	col_key: ColKey;
 
-  // 筛选值
-  filter_keys?: TableColumnFilterValue[];
+	// 筛选值
+	filter_keys?: TableColumnFilterValue[];
 
-  // TODO: 待确认
-  force_filter?: boolean;
+	// TODO: 待确认
+	force_filter?: boolean;
 }

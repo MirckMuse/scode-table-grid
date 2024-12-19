@@ -141,9 +141,17 @@ export class ColState {
   }
 
   get_reduce_width(col_keys: ColKey[]): number {
-    return col_keys.reduce((_w, col_key) => {
-      return _w + this.get_col_width(col_key);
-    }, 0);
+    return col_keys.reduce((_w, col_key) => _w + this.get_col_width(col_key), 0);
+  }
+
+  get_x(col_key: ColKey, offset = 0): number {
+    const { last_center_col_keys, last_left_col_keys, last_right_col_keys } = this.table_state;
+    const all = [...last_left_col_keys, ...last_center_col_keys, ...last_right_col_keys];
+    let index = all.findIndex(key => key === col_key);
+    index = Math.min(index + offset, all.length - 1);
+    index = Math.max(index, 0);
+
+    return this.get_reduce_width(all.slice(0, index));
   }
 
   get_col_height(col_key: ColKey): number {
