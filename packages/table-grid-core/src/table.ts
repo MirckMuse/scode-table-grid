@@ -131,7 +131,7 @@ export class TableState {
 
 		this.row_state = new RowState(this);
 		this.col_state = new ColState(this);
-		this.cell_state = new CellState();
+		this.cell_state = new CellState(this);
 	}
 
 	get_row_state() {
@@ -173,6 +173,8 @@ export class TableState {
 
 	update_col_width(col_key: ColKey, width: number) {
 		this.col_state.update_col_width(col_key, width);
+
+		this.cell_state.reset_col();
 	}
 
 	get_viewport_merged_cell() {
@@ -221,6 +223,10 @@ export class TableState {
 		}
 
 		console.log(this.cell_state.values());
+	}
+
+	reset_merged_cell_x() {
+		this.cell_state.reset_col();
 	}
 
 	// 更新 merged 的单元格
@@ -440,13 +446,6 @@ export class TableState {
 		this.center_col_keys.forEach(_update_span);
 
 		this.share_out_columns_width();
-	}
-
-	// 更新莫一列的宽度
-	update_column_width(col_key: ColKey, new_width: number) {
-		this.col_state.update_col_width(col_key, new_width);
-
-		// TODO: 需要重置其他列的宽度。
 	}
 
 	get is_empty(): boolean {

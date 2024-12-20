@@ -25,6 +25,7 @@
 
     <div :class="`${tableBodyPrefixCls}__merged`">
        <div
+           v-if="mergedCellMeta.length"
            :class="`${tableBodyPrefixCls}__merged-inner`"
            :style="{
              width: contentBox.width + 'px',
@@ -34,6 +35,7 @@
          <MergedCell
              v-for="meta in mergedCellMeta"
              :key="meta.col_key + meta.row_key"
+             :style="{ top: meta.y + 'px', left: meta.x + 'px', width: meta.width + 'px', height: meta.height + 'px' }"
              :prefix-cls="tableBodyPrefixCls"
              :render-body-cell="renderBodyCell"
              :meta="meta"
@@ -56,7 +58,6 @@
 <script lang="ts" setup>
 import type {
 	ColKey,
-	MergedCellMeta,
 	RawData,
 	RowKey,
 } from "@scode/table-grid-core";
@@ -110,6 +111,8 @@ const {
 	contentBox,
 	layoutGrid,
 	mapToColumn,
+
+	mergedCellMeta,
 } = useStateInject();
 
 const updateScroll = () => _updateScroll(scroll.value);
@@ -278,10 +281,8 @@ onUnmounted(() => {
 	event.resetDatasource = undefined;
 });
 
-const mergedCellMeta = shallowRef<MergedCellMeta[]>([]);
-
 function refresh() {
-  mergedCellMeta.value = Array.from(tableState.get_viewport_merged_cell());
+	mergedCellMeta.value = Array.from(tableState.get_viewport_merged_cell());
 	dataSource.value = tableState.get_viewport_dataset();
 }
 

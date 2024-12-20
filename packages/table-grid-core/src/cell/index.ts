@@ -1,6 +1,7 @@
 import type { ColKey, ColState } from "../col";
 import type { RowKey, RowState } from "../row";
 import type { Box, Option } from "../types";
+import type { TableState } from "../table";
 
 export interface CellMeta extends Box {
 	row_key: RowKey;
@@ -19,37 +20,6 @@ export interface MergedCellMeta extends CellMeta {
 	col_span: number;
 }
 
-export class Cell {
-	constructor(
-		readonly row_state: RowState,
-		readonly col_state: ColState,
-		readonly meta: CellMeta,
-	) {}
-
-	get height(): number {
-		return this.meta.height;
-	}
-
-	get width(): number {
-		return this.meta.width;
-	}
-}
-
-// TODO: 当配置存在合并行时，需要使用该类
-export class MergedCell {
-	constructor(readonly meta: MergedCellMeta) {}
-
-	// TODO:
-	get height() {
-		return 56;
-	}
-
-	// TODO:
-	get width() {
-		return 56;
-	}
-}
-
 type CellStateXMap = Map<ColKey, Map<RowKey, MergedCellMeta>>;
 type CellStateYMap = Map<RowKey, Map<ColKey, MergedCellMeta>>;
 
@@ -59,6 +29,12 @@ export class CellState {
 	protected state_x: CellStateXMap = new Map();
 	// row -> col -> meta: 用于批量更新 y
 	protected state_y: CellStateYMap = new Map();
+
+	protected table_state: TableState;
+
+	constructor(table_state: TableState) {
+		this.table_state = table_state;
+	}
 
 	has(col_key: ColKey, row_key: RowKey): boolean {
 		if (this.state_x.has(col_key)) {
@@ -109,6 +85,26 @@ export class CellState {
 		}
 
 		return metas;
+	}
+
+	get_col_keys() {
+		return Array.from(this.state_x.keys());
+	}
+
+	reset_col() {
+		const col_state = this.table_state.get_col_state();
+
+		const col_keys = this.get_col_keys();
+
+		for (const col_key of col_keys) {
+			const start_x = col_state.get_x(col_key);
+
+			for (const meta of this.state_x.get(col_key).values()) {
+				const end_x = col_state.get_x(col_key, meta.col_span);
+				meta.x = start_x;
+				meta.width = end_x - start_x;
+			}
+		}
 	}
 
 	update_x(col_key: ColKey, x: number) {

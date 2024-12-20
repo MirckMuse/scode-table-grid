@@ -4,8 +4,9 @@ import type {
 	TableColumn as CoreTableColumn,
 	IViewport,
 	Scroll,
+	MergedCellMeta,
 } from "@scode/table-grid-core";
-import type { ComputedRef, InjectionKey, Ref } from "vue";
+import type { ComputedRef, InjectionKey, Ref, ShallowRef } from "vue";
 import type { TableColumn, TableProps, TableSlots } from "../typing";
 
 import {
@@ -44,6 +45,8 @@ export interface ITableContext {
 	contentBox: ComputedRef<Box>;
 
 	layoutGrid: LayoutGrid;
+
+	mergedCellMeta: ShallowRef<MergedCellMeta[]>;
 }
 
 const DefaultViewport: IViewport = { width: 1920, height: 900 };
@@ -73,6 +76,8 @@ export function useStateProvide({ props, slot }: IStateOption) {
 	const { event } = useEvent();
 
 	const _columnMap = new Map();
+
+	const mergedCellMeta = shallowRef<MergedCellMeta[]>([]);
 	function updateColumns(columns: TableColumn[]) {
 		_columnMap.clear();
 
@@ -132,6 +137,8 @@ export function useStateProvide({ props, slot }: IStateOption) {
 		tableState.reset_content_box_width();
 
 		updateColLayoutGrid();
+
+		// mergedCellMeta.value = Array.from(tableState.get_viewport_merged_cell());
 	});
 
 	const handleResizeColumn = (colKey: ColKey, resizedWidth: number) => {
@@ -144,10 +151,8 @@ export function useStateProvide({ props, slot }: IStateOption) {
 		// props.onResizeColumn?.(resizedWidth, column);
 		revertTableUserSelect();
 
-		const colState = tableState.get_col_state();
-
 		if (colKey) {
-			colState.update_col_width(colKey, resizedWidth);
+			tableState.update_col_width(colKey, resizedWidth);
 		}
 
 		animationUpdate();
@@ -215,6 +220,8 @@ export function useStateProvide({ props, slot }: IStateOption) {
 		contentBox,
 
 		layoutGrid,
+
+		mergedCellMeta,
 	});
 
 	return {
@@ -246,5 +253,7 @@ export function useStateInject() {
 		contentBox: computed(() => DefaultViewport),
 
 		layoutGrid: reactive(DefaultLayoutGrid),
+
+		mergedCellMeta: shallowRef([]),
 	});
 }

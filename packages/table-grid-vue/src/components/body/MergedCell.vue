@@ -6,6 +6,7 @@ import type {
 	TableState,
 } from "@scode/table-grid-core";
 import type { BodyCellInheritProps, TableColumn } from "../../typing";
+import { computed } from "vue";
 
 interface MergedCellProps extends BodyCellInheritProps {
 	prefixCls: string;
@@ -17,19 +18,18 @@ interface MergedCellProps extends BodyCellInheritProps {
 	mapToColumn: (colKey: ColKey) => TableColumn;
 }
 
-const { meta, tableState } = defineProps<MergedCellProps>();
+const props = defineProps<MergedCellProps>();
 
-const rowState = tableState.get_row_state();
+const rowState = props.tableState.get_row_state();
 
-const rowMeta = rowState.get_meta_by_row_key(meta.row_key);
-const record = rowState.get_raw_data_by_row_key(meta.row_key);
+const rowMeta = rowState.get_meta_by_row_key(props.meta.row_key);
+const record = rowState.get_raw_data_by_row_key(props.meta.row_key);
 </script>
 
 <template>
   <BodyCell
     v-bind="$props"
     :class="prefixCls + '-cell__merged'"
-    :style="{ top: meta.y + 'px', left: meta.x + 'px', width: meta.width + 'px', height: meta.height + 'px' }"
     :column="mapToColumn(meta.col_key)"
     :record="record"
     :row-index="rowMeta.index"
