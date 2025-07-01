@@ -182,6 +182,8 @@ export class TableState {
 
 		const meta_list = this.cell_state.values();
 
+		console.log(meta_list);
+
 		const buffer = this.viewport.height / 2;
 
 		const min = Math.max(scroll.top - buffer, 0);
@@ -221,8 +223,10 @@ export class TableState {
 				this.update_merged_cell(meta.key, item.col_key, colSpan, rowSpan);
 			}
 		}
+	}
 
-		console.log(this.cell_state.values());
+	reset_merged_cell_y() {
+
 	}
 
 	reset_merged_cell_x() {
@@ -503,6 +507,7 @@ export class TableState {
 
 		this.row_state.reset_display_dataset_y();
 
+		this.cell_state.reset_row();
 		this.default_scroll_behavior();
 	}
 

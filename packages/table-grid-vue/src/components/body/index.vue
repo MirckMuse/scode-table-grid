@@ -282,7 +282,7 @@ onUnmounted(() => {
 });
 
 function refresh() {
-	mergedCellMeta.value = Array.from(tableState.get_viewport_merged_cell());
+	// mergedCellMeta.value = Array.from(tableState.get_viewport_merged_cell());
 	dataSource.value = tableState.get_viewport_dataset();
 }
 
@@ -301,6 +301,7 @@ const $resize = new ResizeObserver((entry) => {
 
 onBeforeMount(() => {
 	refresh();
+	mergedCellMeta.value = Array.from(tableState.get_viewport_merged_cell());
 	resetGridTemplateRows();
 });
 

@@ -1,15 +1,21 @@
 # @scode/table-grid-vue
 
-
+## 组件
++ [ ] Button
++ [ ] Pagination
++ [ ] Dropdown
++ [ ] Menu
++ [ ] Loading
++ [ ] Result
++ [ ] Tree
++ [ ] Checkbox
++ [ ] Radio
++ [ ] Tooltip
 
 ## TODO:
 1. 列
 + [ ] 列宽的自动分配
 
-2. 滚动条
-+ [ ] 横向滚动条
-
 ## FIXME:
 1. 滚动条
 + [ ] 滚动条不到底
-

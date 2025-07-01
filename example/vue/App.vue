@@ -1,9 +1,9 @@
 <template>
-  <div style="padding: 24px;">
-    <STable style="height: 600px;" :columns="tableColumns" :data-source="dataSource" :bordered="true"
-      :custom-row="customRow" :row-class-name="rowClassName">
-    </STable>
-  </div>
+	<div style="padding: 24px;">
+		<STable style="height: 600px;" :columns="tableColumns" :data-source="dataSource" :bordered="true"
+			:custom-row="customRow" :row-class-name="rowClassName">
+		</STable>
+	</div>
 </template>
 
 <script lang="ts" setup>
@@ -16,7 +16,7 @@ const dataSource = ref(
 	Array(100)
 		.fill(0)
 		.map((_, i) => {
-			return { name: `姓名${i}`, age: randomInt(18, 50), sex: "难" };
+			return { name: `姓名${i}`, age: randomInt(18, 50), sex: "难" + i };
 		}),
 );
 
@@ -63,7 +63,7 @@ const tableColumns = ref<TableColumn[]>([
 
 <style>
 .blue {
-  background-color: blue;
-  color: #FFF;
+	background-color: blue;
+	color: #FFF;
 }
 </style>

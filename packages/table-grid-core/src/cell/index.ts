@@ -1,5 +1,5 @@
-import type { ColKey, ColState } from "../col";
-import type { RowKey, RowState } from "../row";
+import type { ColKey } from "../col";
+import type { RowKey } from "../row";
 import type { Box, Option } from "../types";
 import type { TableState } from "../table";
 
@@ -38,7 +38,7 @@ export class CellState {
 
 	has(col_key: ColKey, row_key: RowKey): boolean {
 		if (this.state_x.has(col_key)) {
-			return this.state_x.get(col_key).has(row_key);
+			return this.state_x.get(col_key)?.has(row_key) ?? false;
 		}
 
 		return false;
@@ -103,6 +103,36 @@ export class CellState {
 				const end_x = col_state.get_x(col_key, meta.col_span);
 				meta.x = start_x;
 				meta.width = end_x - start_x;
+			}
+		}
+	}
+
+	protected get_row_keys() {
+		return Array.from(this.state_y.keys());
+	}
+
+	reset_row() {
+		const row_state = this.table_state.get_row_state();
+
+		const _get_y = (row_key: RowKey, offset = 0) => {
+			const row_data = row_state.get_raw_data_by_row_key(row_key);
+
+			if (!row_data) return 0;
+
+
+			return row_state.get_y(row_data, offset);
+		}
+
+
+		const row_keys = this.get_row_keys();
+
+		for (const row_key of row_keys) {
+			const start_y = _get_y(row_key);
+
+			for (const meta of this.state_y.get(row_key)?.values() ?? []) {
+				const end_y = _get_y(row_key, meta.row_span);
+				meta.y = start_y;
+				meta.height = end_y - start_y;
 			}
 		}
 	}

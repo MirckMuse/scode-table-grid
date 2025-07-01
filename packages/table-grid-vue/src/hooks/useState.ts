@@ -130,7 +130,10 @@ export function useStateProvide({ props, slot }: IStateOption) {
 
 	useSorter(tableState, {
 		resetScroll,
-		resetDataSource: () => event.resetDatasource?.(),
+		resetDataSource: () => {
+			event.resetDatasource?.()
+			mergedCellMeta.value = Array.from(tableState.get_viewport_merged_cell());
+		},
 	});
 
 	const animationUpdate = createLockedRequestAnimationFrame(() => {
@@ -138,7 +141,7 @@ export function useStateProvide({ props, slot }: IStateOption) {
 
 		updateColLayoutGrid();
 
-		// mergedCellMeta.value = Array.from(tableState.get_viewport_merged_cell());
+		mergedCellMeta.value = Array.from(tableState.get_viewport_merged_cell());
 	});
 
 	const handleResizeColumn = (colKey: ColKey, resizedWidth: number) => {
